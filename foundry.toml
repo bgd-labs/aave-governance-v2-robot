@@ -5,6 +5,8 @@ script = 'scripts'
 out = 'out'
 libs = ['lib']
 remappings = [
+    'chainlink-brownie-contracts/=lib/chainlink-brownie-contracts/contracts/src/v0.8/',
+    'aave-address-book/=lib/aave-address-book/src/',
 ]
 fs_permissions = [{access = "write", path = "./reports"}]
 
