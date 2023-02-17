@@ -7,3 +7,6 @@
 [submodule "lib/chainlink-brownie-contracts"]
 	path = lib/chainlink-brownie-contracts
 	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+[submodule "lib/governance-crosschain-bridges"]
+	path = lib/governance-crosschain-bridges
+	url = https://github.com/aave/governance-crosschain-bridges
