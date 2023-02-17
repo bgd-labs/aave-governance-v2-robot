@@ -7,16 +7,14 @@ import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/
 import 'forge-std/console.sol';
 
 contract L2RobotKeeperTest is Test {
-  L2RobotKeeper public l2RobotKeeper;
-  function setUp() public {
-    l2RobotKeeper = new L2RobotKeeper();
-  }
 
   function testSimpleExecutePolygon() public {
     vm.createSelectFork(
       'https://polygon-mainnet.g.alchemy.com/v2/rYCvre87pHXUBPFA0Shbg63H6VVCRZHq',
       39099833 // Feb-09-2023
     );
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
+
     IExecutorBase bridgeExecutor = IExecutorBase(0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772);
     IExecutorBase.ActionsSetState initialActionsSetState = bridgeExecutor.getCurrentState(13);
     assertEq(uint256(initialActionsSetState), 0);

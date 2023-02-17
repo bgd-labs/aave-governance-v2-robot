@@ -7,16 +7,14 @@ import {IAaveGovernanceV2, AaveGovernanceV2} from 'aave-address-book/AaveGoverna
 import 'forge-std/console.sol';
 
 contract EthRobotKeeperTest is Test {
-  EthRobotKeeper public ethRobotKeeper;
-  function setUp() public {
-    ethRobotKeeper = new EthRobotKeeper();
-  }
 
   function testSimpleQueue() public {
     vm.createSelectFork(
       'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
       16613098 // Feb-12-2023
     );
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
+
     IAaveGovernanceV2.ProposalState initialProposalState = AaveGovernanceV2.GOV.getProposalState(153);
     assertEq(uint256(initialProposalState), 4);
     console.log('Initial State of Proposal 153', uint256(initialProposalState));
@@ -36,6 +34,8 @@ contract EthRobotKeeperTest is Test {
       'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
       16620260 // Feb-13-2023
     );
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
+
     IAaveGovernanceV2.ProposalState initialProposalState = AaveGovernanceV2.GOV.getProposalState(153);
     assertEq(uint256(initialProposalState), 5);
     console.log('Initial State of Proposal 153', uint256(initialProposalState));
