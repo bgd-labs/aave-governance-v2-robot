@@ -12,7 +12,6 @@ import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
  * - moves the proposal to queued and executed if all the conditions are met
  */
 contract EthRobotKeeper is IGovernanceRobotKeeper {
-  // TODO: add SafeMath
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued or executed state
@@ -33,7 +32,7 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     uint256 proposalsStartLimit = 0;
 
     // iterate from the last proposal till we find an executed proposal
-    for (uint proposalId = proposalsCount - 1; proposalId >= 0; proposalId--) {
+    for (uint256 proposalId = proposalsCount - 1; proposalId >= 0; proposalId--) {
       if (governanceV2.getProposalState(proposalId) == IAaveGovernanceV2.ProposalState.Executed) {
         proposalId < 20 ? proposalsStartLimit = 0 : proposalsStartLimit = proposalId - 20;
         break;
@@ -41,12 +40,12 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     }
 
     // iterate from an executed proposal minus 20 to be sure
-    for (uint i = proposalsStartLimit; i < proposalsCount; i++) {
-      if (canProposalBeQueued(i, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
+    for (uint256 proposalId = proposalsStartLimit; proposalId < proposalsCount; proposalId++) {
+      if (canProposalBeQueued(proposalId, governanceAddress)) {
+        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformQueue);
         return (true, performData);
-      } else if (canProposalBeExecuted(i, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformExecute);
+      } else if (canProposalBeExecuted(proposalId, governanceAddress)) {
+        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformExecute);
         return (true, performData);
       }
     }
@@ -90,7 +89,6 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     );
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
     IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
-    // TODO: Use SafeMath
     if (
       proposalState == IAaveGovernanceV2.ProposalState.Queued && 
       block.timestamp >= proposal.executionTime && 
