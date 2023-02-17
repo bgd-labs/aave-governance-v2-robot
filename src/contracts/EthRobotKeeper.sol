@@ -46,7 +46,7 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
         bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
         return (true, performData);
       } else if (canProposalBeExecuted(i, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
+        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformExecute);
         return (true, performData);
       }
     }
