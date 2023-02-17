@@ -29,13 +29,12 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       governanceAddress
     );
 
-    bytes memory performData;
     uint256 proposalsCount = governanceV2.getProposalsCount();
-    uint256 proposalsStartLimit = proposalsCount;
+    uint256 proposalsStartLimit = 0;
 
     // iterate from the last proposal till we find an executed proposal
-    for (uint proposalId = proposalsCount - 1; proposalId >= 0 ; proposalId--) {
-      if (governanceV2.getProposalState(proposalsStartLimit) == IAaveGovernanceV2.ProposalState.Executed) {
+    for (uint proposalId = proposalsCount - 1; proposalId >= 0; proposalId--) {
+      if (governanceV2.getProposalState(proposalId) == IAaveGovernanceV2.ProposalState.Executed) {
         proposalId < 20 ? proposalsStartLimit = 0 : proposalsStartLimit = proposalId - 20;
         break;
       }
@@ -44,15 +43,15 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     // iterate from an executed proposal minus 20 to be sure
     for (uint i = proposalsStartLimit; i < proposalsCount; i++) {
       if (canProposalBeQueued(i, governanceAddress)) {
-        performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
+        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
         return (true, performData);
       } else if (canProposalBeExecuted(i, governanceAddress)) {
-        performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
+        bytes memory performData = abi.encode(governanceAddress, i, ProposalAction.PerformQueue);
         return (true, performData);
       }
     }
 
-    return (false, performData);
+    return (false, checkData);
   }
 
   /**
@@ -66,10 +65,10 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     );
 
     if (action == ProposalAction.PerformQueue) {
-      require(canProposalBeQueued(proposalId, governanceAddress), 'INVALID_STATE_FOR_QUEUED');
+      require(canProposalBeQueued(proposalId, governanceAddress), 'INVALID_STATE_FOR_QUEUE');
       governanceV2.queue(proposalId);
     } else if (action == ProposalAction.PerformExecute) {
-      require(canProposalBeExecuted(proposalId, governanceAddress), 'INVALID_STATE_FOR_EXECUTED');
+      require(canProposalBeExecuted(proposalId, governanceAddress), 'INVALID_STATE_FOR_EXECUTE');
       governanceV2.execute(proposalId);
     }
   }
@@ -78,11 +77,8 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
       governanceAddress
     );
-    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
-    uint256 delay = proposal.executor.getDelay();
     IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
-    // TODO: Use SafeMath and check logic for delay
-    if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded && block.timestamp >= proposal.executionTime + delay) {
+    if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       return true;
     }
     return false;
@@ -94,9 +90,12 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     );
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
     IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
-    uint256 GRACE_PERIOD = proposal.executor.GRACE_PERIOD();
     // TODO: Use SafeMath
-    if (proposalState == IAaveGovernanceV2.ProposalState.Queued && block.timestamp <= proposal.executionTime + GRACE_PERIOD) {
+    if (
+      proposalState == IAaveGovernanceV2.ProposalState.Queued && 
+      block.timestamp >= proposal.executionTime && 
+      block.timestamp <= proposal.executionTime + proposal.executor.GRACE_PERIOD()
+    ) {
       return true;
     }
     return false;
