@@ -49,4 +49,24 @@ contract EthRobotKeeperTest is Test {
       console.log('Final State of Proposal 153 after automation: Executed', uint256(proposalState));
     }
   }
+
+  function testSimpleCancel() public {
+    vm.createSelectFork(
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      12172974 // Apr-04-2021
+    );
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
+
+    IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(6);
+    assertEq(uint256(proposalState), 2);
+    console.log('Initial State of Proposal 6: Active', uint256(proposalState));
+    (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
+
+    if (shouldRunKeeper) {
+      ethRobotKeeper.performUpkeep(performData);
+      proposalState = AaveGovernanceV2.GOV.getProposalState(6);
+      assertEq(uint256(proposalState), 1);
+      console.log('Final State of Proposal 6 after automation: Cancelled', uint256(proposalState));
+    }
+  }
 }

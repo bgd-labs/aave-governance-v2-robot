@@ -7,6 +7,7 @@ interface IGovernanceRobotKeeper is KeeperCompatibleInterface{
 
     enum ProposalAction {
         PerformQueue,
-        PerformExecute
+        PerformExecute,
+        PerformCancel
     }
 }

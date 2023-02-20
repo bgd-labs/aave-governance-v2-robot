@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {KeeperCompatibleInterface} from 'chainlink-brownie-contracts/KeeperCompatible.sol';
 import {IAaveGovernanceV2, IExecutorWithTimelock} from 'aave-address-book/AaveGovernanceV2.sol';
+import {IProposalValidator} from '../interfaces/IProposalValidator.sol';
 import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
 
 /**
@@ -47,6 +48,9 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       } else if (canProposalBeExecuted(proposalId, governanceAddress)) {
         bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformExecute);
         return (true, performData);
+      } else if (canProposalBeCancelled(proposalId, governanceAddress)) {
+        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformCancel);
+        return (true, performData);
       }
     }
 
@@ -69,6 +73,9 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     } else if (action == ProposalAction.PerformExecute) {
       require(canProposalBeExecuted(proposalId, governanceAddress), 'INVALID_STATE_FOR_EXECUTE');
       governanceV2.execute(proposalId);
+    } else if (action == ProposalAction.PerformCancel) {
+      require(canProposalBeCancelled(proposalId, governanceAddress), 'INVALID_STATE_FOR_CANCEL');
+      governanceV2.cancel(proposalId);
     }
   }
 
@@ -97,5 +104,26 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       return true;
     }
     return false;
+  }
+
+  function canProposalBeCancelled(uint256 proposalId, address governanceAddress) internal view returns (bool) {
+    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
+      governanceAddress
+    );
+    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
+    IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+    IProposalValidator proposalValidator = IProposalValidator(address(proposal.executor));
+    if (
+      proposalState == IAaveGovernanceV2.ProposalState.Expired ||
+      proposalState == IAaveGovernanceV2.ProposalState.Canceled ||
+      proposalState == IAaveGovernanceV2.ProposalState.Executed
+    ) {
+      return false;
+    }
+    return proposalValidator.validateProposalCancellation(
+      governanceV2,
+      proposal.creator,
+      block.number - 1
+    );
   }
 }
