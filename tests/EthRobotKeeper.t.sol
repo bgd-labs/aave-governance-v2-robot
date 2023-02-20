@@ -15,17 +15,17 @@ contract EthRobotKeeperTest is Test {
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
 
-    IAaveGovernanceV2.ProposalState initialProposalState = AaveGovernanceV2.GOV.getProposalState(153);
-    assertEq(uint256(initialProposalState), 4);
-    console.log('Initial State of Proposal 153', uint256(initialProposalState));
+    IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(153);
+    assertEq(uint256(proposalState), 4);
+    console.log('Initial State of Proposal 153: Succeeded', uint256(proposalState));
     
     (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
 
     if (shouldRunKeeper) {
       ethRobotKeeper.performUpkeep(performData);
-      IAaveGovernanceV2.ProposalState finalProposalState = AaveGovernanceV2.GOV.getProposalState(153);
-      assertEq(uint256(finalProposalState), 5);
-      console.log('Final State of Proposal 153 after automation', uint256(finalProposalState));
+      proposalState = AaveGovernanceV2.GOV.getProposalState(153);
+      assertEq(uint256(proposalState), 5);
+      console.log('Final State of Proposal 153 after automation: Queued', uint256(proposalState));
     }
   }
 
@@ -36,17 +36,17 @@ contract EthRobotKeeperTest is Test {
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
 
-    IAaveGovernanceV2.ProposalState initialProposalState = AaveGovernanceV2.GOV.getProposalState(153);
-    assertEq(uint256(initialProposalState), 5);
-    console.log('Initial State of Proposal 153', uint256(initialProposalState));
+    IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(153);
+    assertEq(uint256(proposalState), 5);
+    console.log('Initial State of Proposal 153: Queued', uint256(proposalState));
 
     (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
 
     if (shouldRunKeeper) {
       ethRobotKeeper.performUpkeep(performData);
-      IAaveGovernanceV2.ProposalState finalProposalState = AaveGovernanceV2.GOV.getProposalState(153);
-      assertEq(uint256(finalProposalState), 7);
-      console.log('Final State of Proposal 153 after automation', uint256(finalProposalState));
+      proposalState = AaveGovernanceV2.GOV.getProposalState(153);
+      assertEq(uint256(proposalState), 7);
+      console.log('Final State of Proposal 153 after automation: Executed', uint256(proposalState));
     }
   }
 }

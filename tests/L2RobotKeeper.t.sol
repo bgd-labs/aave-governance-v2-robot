@@ -16,17 +16,17 @@ contract L2RobotKeeperTest is Test {
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
 
     IExecutorBase bridgeExecutor = IExecutorBase(0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772);
-    IExecutorBase.ActionsSetState initialActionsSetState = bridgeExecutor.getCurrentState(13);
-    assertEq(uint256(initialActionsSetState), 0);
-    console.log('Initial State of ActionsSet 13', uint256(initialActionsSetState));
+    IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(13);
+    assertEq(uint256(actionsSetState), 0);
+    console.log('Initial State of ActionsSet 13: Queued', uint256(actionsSetState));
 
     (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(address(bridgeExecutor)));
 
     if (shouldRunKeeper) {
       l2RobotKeeper.performUpkeep(performData);
-      IExecutorBase.ActionsSetState finalActionsSetState = bridgeExecutor.getCurrentState(13);
-      assertEq(uint256(finalActionsSetState), 1);
-      console.log('Final State of ActionsSet 13 after automation', uint256(finalActionsSetState));
+      actionsSetState = bridgeExecutor.getCurrentState(13);
+      assertEq(uint256(actionsSetState), 1);
+      console.log('Final State of ActionsSet 13 after automation: Executed', uint256(actionsSetState));
     }
   }
 
@@ -38,17 +38,17 @@ contract L2RobotKeeperTest is Test {
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
 
     IExecutorBase bridgeExecutor = IExecutorBase(0x7d9103572bE58FfE99dc390E8246f02dcAe6f611);
-    IExecutorBase.ActionsSetState initialActionsSetState = bridgeExecutor.getCurrentState(0);
-    assertEq(uint256(initialActionsSetState), 0);
-    console.log('Initial State of ActionsSet 0', uint256(initialActionsSetState));
+    IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(0);
+    assertEq(uint256(actionsSetState), 0);
+    console.log('Initial State of ActionsSet 0: Queued', uint256(actionsSetState));
 
     (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(address(bridgeExecutor)));
 
     if (shouldRunKeeper) {
       l2RobotKeeper.performUpkeep(performData);
-      IExecutorBase.ActionsSetState finalActionsSetState = bridgeExecutor.getCurrentState(0);
-      assertEq(uint256(finalActionsSetState), 1);
-      console.log('Final State of ActionsSet 0 after automation', uint256(finalActionsSetState));
+      actionsSetState = bridgeExecutor.getCurrentState(0);
+      assertEq(uint256(actionsSetState), 1);
+      console.log('Final State of ActionsSet 0 after automation: Executed', uint256(actionsSetState));
     }
   }
 }
