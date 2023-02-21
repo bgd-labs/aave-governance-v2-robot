@@ -5,6 +5,7 @@ import {KeeperCompatibleInterface} from 'chainlink-brownie-contracts/KeeperCompa
 import {IAaveGovernanceV2, IExecutorWithTimelock} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IProposalValidator} from '../interfaces/IProposalValidator.sol';
 import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
+import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 
 /**
  * @author BGD Labs
@@ -12,7 +13,9 @@ import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
  * - checks if the proposal state could be moved to queued, executed or cancelled
  * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
-contract EthRobotKeeper is IGovernanceRobotKeeper {
+contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
+
+  mapping (uint256 => bool) public disabledProposals;
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
@@ -46,7 +49,9 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
 
-      if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+      if (isProposalDisabled(proposalId)) {
+        return (false, checkData);
+      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
         bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformCancel);
         return (true, performData);
       } else if (canProposalBeQueued(proposalState)) {
@@ -116,5 +121,13 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       proposal.creator,
       block.number - 1
     );
+  }
+
+  function isProposalDisabled(uint256 proposalId) internal view returns (bool) {
+    return disabledProposals[proposalId];
+  }
+
+  function disableAutomationForProposal(uint256 proposalId) external onlyOwner {
+    disabledProposals[proposalId] = true;
   }
 }

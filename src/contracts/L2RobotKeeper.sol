@@ -5,6 +5,7 @@ import {KeeperCompatibleInterface} from 'chainlink-brownie-contracts/KeeperCompa
 import {IAaveGovernanceV2, IExecutorWithTimelock} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/IExecutorBase.sol';
 import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
+import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 
 /**
  * @author BGD Labs
@@ -12,7 +13,9 @@ import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
  * - checks if the proposal actionsSet state could be moved to executed
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
-contract L2RobotKeeper is IGovernanceRobotKeeper {
+contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
+
+  mapping (uint256 => bool) public disabledActionsSets;
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state
@@ -34,7 +37,9 @@ contract L2RobotKeeper is IGovernanceRobotKeeper {
 
     // iterate from the last actionsSet till we find an executed actionsSet
     for (uint256 actionsSetId = actionsSetCount - 1; actionsSetId >= 0; actionsSetId--) {
-      if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
+      if (isActionsSetDisabled(actionsSetId)) {
+        return (false, checkData);
+      } else if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
         actionsSetId < 20 ? actionsSetStartLimit = 0 : actionsSetStartLimit = actionsSetId - 20;
         break;
       }
@@ -74,5 +79,13 @@ contract L2RobotKeeper is IGovernanceRobotKeeper {
       return true;
     }
     return false;
+  }
+
+  function isActionsSetDisabled(uint256 actionsSetId) internal view returns (bool) {
+    return disabledActionsSets[actionsSetId];
+  }
+
+  function disableAutomationForActionsSet(uint256 actionsSetId) external onlyOwner {
+    disabledActionsSets[actionsSetId] = true;
   }
 }
