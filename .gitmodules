@@ -14,3 +14,6 @@
 	path = lib/aave-helpers
 	url = https://github.com/bgd-labs/aave-helpers
 	branch = master
+[submodule "lib/solidity-utils"]
+	path = lib/solidity-utils
+	url = https://github.com/bgd-labs/solidity-utils
