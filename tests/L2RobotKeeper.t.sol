@@ -20,14 +20,11 @@ contract L2RobotKeeperTest is Test {
     assertEq(uint256(actionsSetState), 0);
     console.log('Initial State of ActionsSet 13: Queued', uint256(actionsSetState));
 
-    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(address(bridgeExecutor)));
+    checkAndPerformUpKeep(l2RobotKeeper, address(bridgeExecutor));
 
-    if (shouldRunKeeper) {
-      l2RobotKeeper.performUpkeep(performData);
-      actionsSetState = bridgeExecutor.getCurrentState(13);
-      assertEq(uint256(actionsSetState), 1);
-      console.log('Final State of ActionsSet 13 after automation: Executed', uint256(actionsSetState));
-    }
+    actionsSetState = bridgeExecutor.getCurrentState(13);
+    assertEq(uint256(actionsSetState), 1);
+    console.log('Final State of ActionsSet 13 after automation: Executed', uint256(actionsSetState));
   }
 
   function testSimpleExecuteArbitrum() public {
@@ -42,13 +39,17 @@ contract L2RobotKeeperTest is Test {
     assertEq(uint256(actionsSetState), 0);
     console.log('Initial State of ActionsSet 0: Queued', uint256(actionsSetState));
 
-    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(address(bridgeExecutor)));
+    checkAndPerformUpKeep(l2RobotKeeper, address(bridgeExecutor));
 
+    actionsSetState = bridgeExecutor.getCurrentState(0);
+    assertEq(uint256(actionsSetState), 1);
+    console.log('Final State of ActionsSet 0 after automation: Executed', uint256(actionsSetState));
+  }
+
+  function checkAndPerformUpKeep(L2RobotKeeper l2RobotKeeper, address bridgeExecutor) private {
+    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(bridgeExecutor));
     if (shouldRunKeeper) {
       l2RobotKeeper.performUpkeep(performData);
-      actionsSetState = bridgeExecutor.getCurrentState(0);
-      assertEq(uint256(actionsSetState), 1);
-      console.log('Final State of ActionsSet 0 after automation: Executed', uint256(actionsSetState));
     }
   }
 }

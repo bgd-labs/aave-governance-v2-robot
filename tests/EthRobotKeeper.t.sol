@@ -96,13 +96,9 @@ contract EthRobotKeeperTest is Test {
   }
 
   function checkAndPerformUpKeep(EthRobotKeeper ethRobotKeeper) private {
-    while (true) {
-      (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
-      if (shouldRunKeeper) {
-        ethRobotKeeper.performUpkeep(performData);
-      } else {
-        break;
-      }
+    (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
+    if (shouldRunKeeper) {
+      ethRobotKeeper.performUpkeep(performData);
     }
   }
 
