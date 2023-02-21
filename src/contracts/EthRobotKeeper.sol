@@ -9,13 +9,13 @@ import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
 /**
  * @author BGD Labs
  * @dev Aave chainlink keeper-compatible contract for proposal automation:
- * - checks if the proposal state could be moved to queued or executed
- * - moves the proposal to queued and executed if all the conditions are met
+ * - checks if the proposal state could be moved to queued, executed or cancelled
+ * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
 contract EthRobotKeeper is IGovernanceRobotKeeper {
 
   /**
-   * @dev run off-chain, checks if proposals should be moved to queued or executed state
+   * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
    * @param checkData address of the governance contract
    */
   function checkUpkeep(bytes calldata checkData)
@@ -42,14 +42,18 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
 
     // iterate from an executed proposal minus 20 to be sure
     for (uint256 proposalId = proposalsStartLimit; proposalId < proposalsCount; proposalId++) {
-      if (canProposalBeQueued(proposalId, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformQueue);
+
+      IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
+      IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+
+      if (canProposalBeQueued(proposalState)) {
+        bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformQueue);
         return (true, performData);
-      } else if (canProposalBeExecuted(proposalId, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformExecute);
+      } else if (canProposalBeExecuted(proposalState, proposal)) {
+        bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformExecute);
         return (true, performData);
-      } else if (canProposalBeCancelled(proposalId, governanceAddress)) {
-        bytes memory performData = abi.encode(governanceAddress, proposalId, ProposalAction.PerformCancel);
+      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+        bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformCancel);
         return (true, performData);
       }
     }
@@ -58,44 +62,35 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
   }
 
   /**
-   * @dev if proposal could be queued/executed - executes queue/execute action on the governance contract
-   * @param performData address of the governance contract, proposal id, action whether to queue or execute
+   * @dev if proposal could be queued/executed/cancelled - executes queue/cancel/execute action on the governance contract
+   * @param performData governance contract, proposal id, action whether to queue, execute or cancel
    */
   function performUpkeep(bytes calldata performData) external override {
-    (address governanceAddress, uint256 proposalId, ProposalAction action) = abi.decode(performData, (address, uint256, ProposalAction));
-    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
-      governanceAddress
-    );
+    (IAaveGovernanceV2 governanceV2, uint256 proposalId, ProposalAction action) = abi.decode(performData, (IAaveGovernanceV2, uint256, ProposalAction));
+
+    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
+    IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
 
     if (action == ProposalAction.PerformQueue) {
-      require(canProposalBeQueued(proposalId, governanceAddress), 'INVALID_STATE_FOR_QUEUE');
+      require(canProposalBeQueued(proposalState), 'INVALID_STATE_FOR_QUEUE');
       governanceV2.queue(proposalId);
     } else if (action == ProposalAction.PerformExecute) {
-      require(canProposalBeExecuted(proposalId, governanceAddress), 'INVALID_STATE_FOR_EXECUTE');
+      require(canProposalBeExecuted(proposalState, proposal), 'INVALID_STATE_FOR_EXECUTE');
       governanceV2.execute(proposalId);
     } else if (action == ProposalAction.PerformCancel) {
-      require(canProposalBeCancelled(proposalId, governanceAddress), 'INVALID_STATE_FOR_CANCEL');
+      require(canProposalBeCancelled(proposalState, proposal, governanceV2), 'INVALID_STATE_FOR_CANCEL');
       governanceV2.cancel(proposalId);
     }
   }
 
-  function canProposalBeQueued(uint256 proposalId, address governanceAddress) internal view returns (bool) {
-    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
-      governanceAddress
-    );
-    IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+  function canProposalBeQueued(IAaveGovernanceV2.ProposalState proposalState) internal pure returns (bool) {
     if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       return true;
     }
     return false;
   }
 
-  function canProposalBeExecuted(uint256 proposalId, address governanceAddress) internal view returns (bool) {
-    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
-      governanceAddress
-    );
-    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
-    IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+  function canProposalBeExecuted(IAaveGovernanceV2.ProposalState proposalState, IAaveGovernanceV2.ProposalWithoutVotes memory proposal) internal view returns (bool) {
     if (
       proposalState == IAaveGovernanceV2.ProposalState.Queued && 
       block.timestamp >= proposal.executionTime && 
@@ -106,12 +101,12 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     return false;
   }
 
-  function canProposalBeCancelled(uint256 proposalId, address governanceAddress) internal view returns (bool) {
-    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(
-      governanceAddress
-    );
-    IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
-    IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+  function canProposalBeCancelled(
+    IAaveGovernanceV2.ProposalState proposalState, 
+    IAaveGovernanceV2.ProposalWithoutVotes memory proposal,
+    IAaveGovernanceV2 governanceV2
+  ) internal view returns (bool) {
+
     IProposalValidator proposalValidator = IProposalValidator(address(proposal.executor));
     if (
       proposalState == IAaveGovernanceV2.ProposalState.Expired ||

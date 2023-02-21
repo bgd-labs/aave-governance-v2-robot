@@ -42,8 +42,8 @@ contract L2RobotKeeper is IGovernanceRobotKeeper {
 
     // iterate from an executed actionsSet minus 20 to be sure
     for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount; actionsSetId++) {
-      if (canActionSetBeExecuted(actionsSetId, executorAddress)) {
-        bytes memory performData = abi.encode(executorAddress, actionsSetId);
+      if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
+        bytes memory performData = abi.encode(bridgeExecutor, actionsSetId);
         return (true, performData);
       }
     }
@@ -53,22 +53,16 @@ contract L2RobotKeeper is IGovernanceRobotKeeper {
 
   /**
    * @dev if actionsSet could be executed - executes execute action on the bridge executor contract
-   * @param performData address of the bridge executor contract, actionsSet id
+   * @param performData bridge executor, actionsSet id
    */
   function performUpkeep(bytes calldata performData) external override {
-    (address executorAddress, uint256 actionsSetId) = abi.decode(performData, (address, uint256));
-    IExecutorBase bridgeExecutor = IExecutorBase(
-      executorAddress
-    );
+    (IExecutorBase bridgeExecutor, uint256 actionsSetId) = abi.decode(performData, (IExecutorBase, uint256));
 
-    require(canActionSetBeExecuted(actionsSetId, executorAddress), 'INVALID_STATE_FOR_EXECUTE');
+    require(canActionSetBeExecuted(actionsSetId, bridgeExecutor), 'INVALID_STATE_FOR_EXECUTE');
     bridgeExecutor.execute(actionsSetId);
   }
 
-  function canActionSetBeExecuted(uint256 actionsSetId, address executorAddress) internal view returns (bool) {
-    IExecutorBase bridgeExecutor = IExecutorBase(
-      executorAddress
-    );
+  function canActionSetBeExecuted(uint256 actionsSetId, IExecutorBase bridgeExecutor) internal view returns (bool) {
     IExecutorBase.ActionsSet memory actionsSet = bridgeExecutor.getActionsSetById(actionsSetId);
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(actionsSetId);
 
