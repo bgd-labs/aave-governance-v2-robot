@@ -46,14 +46,14 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
 
-      if (canProposalBeQueued(proposalState)) {
+      if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+        bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformCancel);
+        return (true, performData);
+      } else if (canProposalBeQueued(proposalState)) {
         bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformQueue);
         return (true, performData);
       } else if (canProposalBeExecuted(proposalState, proposal)) {
         bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformExecute);
-        return (true, performData);
-      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
-        bytes memory performData = abi.encode(governanceV2, proposalId, ProposalAction.PerformCancel);
         return (true, performData);
       }
     }
@@ -70,24 +70,20 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
 
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
     IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
-
-    if (action == ProposalAction.PerformQueue) {
+    if (action == ProposalAction.PerformCancel) {
+      require(canProposalBeCancelled(proposalState, proposal, governanceV2), 'INVALID_STATE_FOR_CANCEL');
+      governanceV2.cancel(proposalId);
+    } else if (action == ProposalAction.PerformQueue) {
       require(canProposalBeQueued(proposalState), 'INVALID_STATE_FOR_QUEUE');
       governanceV2.queue(proposalId);
     } else if (action == ProposalAction.PerformExecute) {
       require(canProposalBeExecuted(proposalState, proposal), 'INVALID_STATE_FOR_EXECUTE');
       governanceV2.execute(proposalId);
-    } else if (action == ProposalAction.PerformCancel) {
-      require(canProposalBeCancelled(proposalState, proposal, governanceV2), 'INVALID_STATE_FOR_CANCEL');
-      governanceV2.cancel(proposalId);
     }
   }
 
   function canProposalBeQueued(IAaveGovernanceV2.ProposalState proposalState) internal pure returns (bool) {
-    if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
-      return true;
-    }
-    return false;
+    return proposalState == IAaveGovernanceV2.ProposalState.Succeeded;
   }
 
   function canProposalBeExecuted(IAaveGovernanceV2.ProposalState proposalState, IAaveGovernanceV2.ProposalWithoutVotes memory proposal) internal view returns (bool) {
