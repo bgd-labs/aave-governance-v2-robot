@@ -32,6 +32,10 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       executorAddress
     );
 
+    uint256 maxNumberOfActions = 25;
+    uint256 actionsCount;
+    uint256[] memory actionsSetIdsToPerformExecute = new uint256[](maxNumberOfActions);
+
     uint256 actionsSetCount = bridgeExecutor.getActionsSetCount();
     uint256 actionsSetStartLimit = 0;
 
@@ -45,26 +49,38 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       }
     }
 
-    // iterate from an executed actionsSet minus 20 to be sure
-    for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount; actionsSetId++) {
+    // iterate from an executed actionsSet minus 20 to be sure, also checks if actionsCount is less than the maxNumberOfActions
+    for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount && actionsCount < maxNumberOfActions; actionsSetId++) {
       if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
-        bytes memory performData = abi.encode(bridgeExecutor, actionsSetId);
-        return (true, performData);
+        actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
+        actionsCount++;
       }
+    }
+
+    if (actionsCount > 0) {
+      // we do not know the length in advance, so we init arrays with the maxNumberOfActions
+      // and then squeeze the array using mstore
+      assembly {
+        mstore(actionsSetIdsToPerformExecute, actionsCount)
+      }
+      bytes memory performData = abi.encode(bridgeExecutor, actionsSetIdsToPerformExecute);
+      return (true, performData);
     }
 
     return (false, checkData);
   }
 
   /**
-   * @dev if actionsSet could be executed - executes execute action on the bridge executor contract
-   * @param performData bridge executor, actionsSet id
+   * @dev if actionsSet could be executed - performs execute action on the bridge executor contract
+   * @param performData bridge executor, actionsSet ids to execute
    */
   function performUpkeep(bytes calldata performData) external override {
-    (IExecutorBase bridgeExecutor, uint256 actionsSetId) = abi.decode(performData, (IExecutorBase, uint256));
+    (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(performData, (IExecutorBase, uint256[]));
 
-    require(canActionSetBeExecuted(actionsSetId, bridgeExecutor), 'INVALID_STATE_FOR_EXECUTE');
-    bridgeExecutor.execute(actionsSetId);
+    for (uint i=0; i<actionsSetIds.length; i++) {
+      require(canActionSetBeExecuted(actionsSetIds[i], bridgeExecutor), 'INVALID_STATE_FOR_EXECUTE');
+      bridgeExecutor.execute(actionsSetIds[i]);
+    }
   }
 
   function canActionSetBeExecuted(uint256 actionsSetId, IExecutorBase bridgeExecutor) internal view returns (bool) {
