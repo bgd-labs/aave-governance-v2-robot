@@ -103,11 +103,9 @@ contract EthRobotKeeperTest is Test {
       12172974 // Apr-04-2021
     );
 
-    vm.startPrank(address(1));
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
     ethRobotKeeper.disableAutomation(6);
-    vm.stopPrank();
 
     vm.startPrank(address(2));
     vm.expectRevert('Ownable: caller is not the owner');
@@ -122,7 +120,6 @@ contract EthRobotKeeperTest is Test {
       governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Executed);
     }
     governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Succeeded);
-
     IAaveGovernanceV2.ProposalState proposal12State = AaveGovernanceV2.GOV.getProposalState(12);
     assertEq(uint256(proposal12State), 4);
     console.log('Initial State of Proposal 12: Succeeded', uint256(proposal12State));
