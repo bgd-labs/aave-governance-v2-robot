@@ -55,8 +55,10 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
 
       if (isProposalDisabled(proposalId)) {
-        return (false, checkData);
-      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+        continue;
+      }
+
+      if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
         proposalIdsToPerformAction[actionsCount] = proposalId;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
         actionsCount++;

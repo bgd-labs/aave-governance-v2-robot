@@ -42,8 +42,10 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
     // iterate from the last actionsSet till we find an executed actionsSet
     for (uint256 actionsSetId = actionsSetCount - 1; actionsSetId >= 0; actionsSetId--) {
       if (isActionsSetDisabled(actionsSetId)) {
-        return (false, checkData);
-      } else if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
+        continue;
+      } 
+ 
+      if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
         actionsSetId < 20 ? actionsSetStartLimit = 0 : actionsSetStartLimit = actionsSetId - 20;
         break;
       }
