@@ -106,12 +106,12 @@ contract EthRobotKeeperTest is Test {
     vm.startPrank(address(1));
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
-    ethRobotKeeper.disableAutomationForProposal(6);
+    ethRobotKeeper.disableAutomation(6);
     vm.stopPrank();
 
     vm.startPrank(address(2));
     vm.expectRevert('Ownable: caller is not the owner');
-    ethRobotKeeper.disableAutomationForProposal(6);
+    ethRobotKeeper.disableAutomation(6);
     vm.stopPrank();
 
     IAaveGovernanceV2.ProposalState proposal6State = AaveGovernanceV2.GOV.getProposalState(6);

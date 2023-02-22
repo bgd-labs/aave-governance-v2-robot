@@ -18,8 +18,8 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   mapping (uint256 => bool) public disabledActionsSets;
 
   /**
-   * @dev run off-chain, checks if proposal actionsSet should be moved to executed state
-   * @param checkData address of the bridge executor contract
+   * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
+   * @param checkData address of the bridge executor contract.
    */
   function checkUpkeep(bytes calldata checkData)
     external
@@ -41,7 +41,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // iterate from the last actionsSet till we find an executed actionsSet
     for (uint256 actionsSetId = actionsSetCount - 1; actionsSetId >= 0; actionsSetId--) {
-      if (isActionsSetDisabled(actionsSetId)) {
+      if (isDisabled(actionsSetId)) {
         continue;
       } 
  
@@ -73,8 +73,8 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   }
 
   /**
-   * @dev if actionsSet could be executed - performs execute action on the bridge executor contract
-   * @param performData bridge executor, actionsSet ids to execute
+   * @dev if actionsSet could be executed - performs execute action on the bridge executor contract.
+   * @param performData bridge executor, actionsSet ids to execute.
    */
   function performUpkeep(bytes calldata performData) external override {
     (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(performData, (IExecutorBase, uint256[]));
@@ -99,11 +99,13 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
     return false;
   }
 
-  function isActionsSetDisabled(uint256 actionsSetId) internal view returns (bool) {
-    return disabledActionsSets[actionsSetId];
+  /// @inheritdoc IGovernanceRobotKeeper
+  function isDisabled(uint256 id) public view returns (bool) {
+    return disabledActionsSets[id];
   }
 
-  function disableAutomationForActionsSet(uint256 actionsSetId) external onlyOwner {
-    disabledActionsSets[actionsSetId] = true;
+  /// @inheritdoc IGovernanceRobotKeeper
+  function disableAutomation(uint256 id) external onlyOwner {
+    disabledActionsSets[id] = true;
   }
 }

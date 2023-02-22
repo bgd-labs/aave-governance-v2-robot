@@ -54,7 +54,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
 
-      if (isProposalDisabled(proposalId)) {
+      if (isDisabled(proposalId)) {
         continue;
       }
 
@@ -148,11 +148,13 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     );
   }
 
-  function isProposalDisabled(uint256 proposalId) internal view returns (bool) {
-    return disabledProposals[proposalId];
+  /// @inheritdoc IGovernanceRobotKeeper
+  function isDisabled(uint256 id) public view returns (bool) {
+    return disabledProposals[id];
   }
 
-  function disableAutomationForProposal(uint256 proposalId) external onlyOwner {
-    disabledProposals[proposalId] = true;
+  /// @inheritdoc IGovernanceRobotKeeper
+  function disableAutomation(uint256 id) external onlyOwner {
+    disabledProposals[id] = true;
   }
 }
