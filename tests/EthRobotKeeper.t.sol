@@ -95,6 +95,49 @@ contract EthRobotKeeperTest is Test {
 
   }
 
+  // initial states -> (proposalId: 6: Active) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Succeeded)
+  // final states -> (proposalId: 6: Succeeded) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Queued)
+  function testMutilpleActionsWithOneDisabled() public {
+    vm.createSelectFork(
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      12172974 // Apr-04-2021
+    );
+
+    vm.startPrank(address(1));
+    GovernanceHelpers governanceHelpers = new GovernanceHelpers();
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
+    ethRobotKeeper.disableAutomationForProposal(6);
+    vm.stopPrank();
+
+    vm.startPrank(address(2));
+    vm.expectRevert('Ownable: caller is not the owner');
+    ethRobotKeeper.disableAutomationForProposal(6);
+    vm.stopPrank();
+
+    IAaveGovernanceV2.ProposalState proposal6State = AaveGovernanceV2.GOV.getProposalState(6);
+    assertEq(uint256(proposal6State), 2);
+    console.log('Initial State of Proposal 6: Active', uint256(proposal6State));
+
+    for (uint i=0; i<5; i++) {
+      governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Executed);
+    }
+    governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Succeeded);
+
+    IAaveGovernanceV2.ProposalState proposal12State = AaveGovernanceV2.GOV.getProposalState(12);
+    assertEq(uint256(proposal12State), 4);
+    console.log('Initial State of Proposal 12: Succeeded', uint256(proposal12State));
+
+    checkAndPerformUpKeep(ethRobotKeeper);
+
+    proposal6State = AaveGovernanceV2.GOV.getProposalState(6);
+    assertTrue(uint256(proposal6State) != 1);
+    console.log('Final State of Proposal 6: Succeeded (Not Cancelled)', uint256(proposal6State));
+
+    proposal12State = AaveGovernanceV2.GOV.getProposalState(12);
+    assertEq(uint256(proposal12State), 5);
+    console.log('Final State of Proposal 12: Queued', uint256(proposal12State));
+  }
+
   function checkAndPerformUpKeep(EthRobotKeeper ethRobotKeeper) private {
     (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
     if (shouldRunKeeper) {
