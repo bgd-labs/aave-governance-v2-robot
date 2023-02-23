@@ -17,6 +17,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledProposals;
   uint256 constant MAX_ACTIONS = 25;
+  error NoActionPerformed(uint proposalId);
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
@@ -99,15 +100,14 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalIdsToPerformAction[i]);
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalIdsToPerformAction[i]);
 
-      if (actionStatesToPerformAction[i] == ProposalAction.PerformCancel) {
-        require(canProposalBeCancelled(proposalState, proposal, governanceV2), 'INVALID_STATE_FOR_CANCEL');
+      if (actionStatesToPerformAction[i] == ProposalAction.PerformCancel && canProposalBeCancelled(proposalState, proposal, governanceV2)) {
         governanceV2.cancel(proposalIdsToPerformAction[i]);
-      } else if (actionStatesToPerformAction[i] == ProposalAction.PerformQueue) {
-        require(canProposalBeQueued(proposalState), 'INVALID_STATE_FOR_QUEUE');
+      } else if (actionStatesToPerformAction[i] == ProposalAction.PerformQueue && canProposalBeQueued(proposalState)) {
         governanceV2.queue(proposalIdsToPerformAction[i]);
-      } else if (actionStatesToPerformAction[i] == ProposalAction.PerformExecute) {
-        require(canProposalBeExecuted(proposalState, proposal), 'INVALID_STATE_FOR_EXECUTE');
+      } else if (actionStatesToPerformAction[i] == ProposalAction.PerformExecute && canProposalBeExecuted(proposalState, proposal)) {
         governanceV2.execute(proposalIdsToPerformAction[i]);
+      } else {
+        revert NoActionPerformed(proposalIdsToPerformAction[i]);
       }
     }
   }

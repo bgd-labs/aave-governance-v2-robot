@@ -17,6 +17,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledActionsSets;
   uint256 constant MAX_ACTIONS = 25;
+  error NoActionPerformed(uint actionsSetId);
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
@@ -80,8 +81,11 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
     (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(performData, (IExecutorBase, uint256[]));
 
     for (uint i=0; i<actionsSetIds.length; i++) {
-      require(canActionSetBeExecuted(actionsSetIds[i], bridgeExecutor), 'INVALID_STATE_FOR_EXECUTE');
-      bridgeExecutor.execute(actionsSetIds[i]);
+      if (canActionSetBeExecuted(actionsSetIds[i], bridgeExecutor)) {
+        bridgeExecutor.execute(actionsSetIds[i]);
+      } else {
+        revert NoActionPerformed(actionsSetIds[i]);
+      }
     }
   }
 
