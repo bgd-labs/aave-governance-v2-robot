@@ -34,30 +34,31 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       executorAddress
     );
 
-    uint256 actionsCount;
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
     uint256 actionsSetCount = bridgeExecutor.getActionsSetCount();
-    uint256 actionsSetStartLimit = 0;
+    uint256 index = actionsSetCount;
+    uint256 skipCount = 0;
+    uint256 actionsCount = 0;
 
-    // iterate from the last actionsSet till we find an executed actionsSet
-    for (uint256 actionsSetId = actionsSetCount - 1; actionsSetId >= 0; actionsSetId--) {
+    while (index != 0 && skipCount <=20 && actionsCount <= MAX_ACTIONS) {
+      uint256 actionsSetId = index - 1;
+
       if (isDisabled(actionsSetId)) {
+        index--;
         continue;
-      } 
- 
-      if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
-        actionsSetStartLimit = actionsSetId < 20 ? 0 : actionsSetId - 20;
-        break;
       }
-    }
 
-    // iterate from an executed actionsSet minus 20 to be sure, also checks if actionsCount is less than the maxNumberOfActions
-    for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount && actionsCount < MAX_ACTIONS; actionsSetId++) {
       if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
+        skipCount = 0;
         actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
         actionsCount++;
+      } else {
+        // it is in final state executed/expired/cancelled
+        skipCount++;
       }
+
+      index--;
     }
 
     if (actionsCount > 0) {
@@ -80,11 +81,12 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   function performUpkeep(bytes calldata performData) external override {
     (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(performData, (IExecutorBase, uint256[]));
 
-    for (uint i=0; i<actionsSetIds.length; i++) {
-      if (canActionSetBeExecuted(actionsSetIds[i], bridgeExecutor)) {
-        bridgeExecutor.execute(actionsSetIds[i]);
+    // executes action on actionSetIds in order from first to last
+    for (uint i=actionsSetIds.length; i>0; i--) {
+      if (canActionSetBeExecuted(actionsSetIds[i-1], bridgeExecutor)) {
+        bridgeExecutor.execute(actionsSetIds[i-1]);
       } else {
-        revert NoActionPerformed(actionsSetIds[i]);
+        revert NoActionPerformed(actionsSetIds[i-1]);
       }
     }
   }
