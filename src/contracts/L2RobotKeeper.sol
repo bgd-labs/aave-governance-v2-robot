@@ -41,9 +41,6 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // iterate from the last actionsSet till we find an executed actionsSet
     for (uint256 actionsSetId = actionsSetCount - 1; actionsSetId >= 0; actionsSetId--) {
-      if (isDisabled(actionsSetId)) {
-        continue;
-      } 
  
       if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
         actionsSetStartLimit = actionsSetId < 20 ? 0 : actionsSetId - 20;
@@ -53,7 +50,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // iterate from an executed actionsSet minus 20 to be sure, also checks if actionsCount is less than the maxNumberOfActions
     for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount && actionsCount < MAX_ACTIONS; actionsSetId++) {
-      if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
+      if (canActionSetBeExecuted(actionsSetId, bridgeExecutor) && !isDisabled(actionsSetId)) {
         actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
         actionsCount++;
       }
