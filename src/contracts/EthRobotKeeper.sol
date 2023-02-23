@@ -39,27 +39,25 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      uint256 proposalId = index - 1;
-
-      IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
+      IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(index - 1);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(
-        proposalId
+        index - 1
       );
 
-      if (isDisabled(proposalId)) {
+      if (isDisabled(index - 1)) {
         skipCount++;
       } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
-        proposalIdsToPerformAction[actionsCount] = proposalId;
+        proposalIdsToPerformAction[actionsCount] = index - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
         actionsCount++;
         skipCount = 0;
       } else if (canProposalBeQueued(proposalState)) {
-        proposalIdsToPerformAction[actionsCount] = proposalId;
+        proposalIdsToPerformAction[actionsCount] = index - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformQueue;
         actionsCount++;
         skipCount = 0;
       } else if (canProposalBeExecuted(proposalState, proposal)) {
-        proposalIdsToPerformAction[actionsCount] = proposalId;
+        proposalIdsToPerformAction[actionsCount] = index - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformExecute;
         actionsCount++;
         skipCount = 0;
