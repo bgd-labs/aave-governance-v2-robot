@@ -17,6 +17,8 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledActionsSets;
   uint256 constant MAX_ACTIONS = 25;
+  uint256 constant MAX_SKIP = 20;
+
   error NoActionPerformed(uint actionsSetId);
 
   /**
@@ -36,25 +38,22 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
-    uint256 actionsSetCount = bridgeExecutor.getActionsSetCount();
-    uint256 index = actionsSetCount;
+    uint256 index = bridgeExecutor.getActionsSetCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
-    while (index != 0 && skipCount <=20 && actionsCount <= MAX_ACTIONS) {
+    // loops from the last actionsSetId until MAX_SKIP iterations, resets skipCount if it can be Executed
+    while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
       uint256 actionsSetId = index - 1;
 
       if (isDisabled(actionsSetId)) {
-        index--;
-        continue;
-      }
-
-      if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
+        skipCount++;
+      } else if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
         skipCount = 0;
         actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
         actionsCount++;
       } else {
-        // it is in final state executed/expired/cancelled
+        // it is in final state: executed/expired/cancelled
         skipCount++;
       }
 

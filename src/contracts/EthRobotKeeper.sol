@@ -17,6 +17,8 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledProposals;
   uint256 constant MAX_ACTIONS = 25;
+  uint256 constant MAX_SKIP = 20;
+
   error NoActionPerformed(uint proposalId);
 
   /**
@@ -37,23 +39,20 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
     ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
 
-    uint256 proposalsCount = governanceV2.getProposalsCount();
-    uint256 index = proposalsCount;
+    uint256 index = governanceV2.getProposalsCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
-    while (index != 0 && skipCount <=20 && actionsCount <= MAX_ACTIONS) {
+    // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
+    while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
       uint256 proposalId = index - 1;
 
-      if (isDisabled(proposalId)) {
-        index--;
-        continue;
-      }
-      
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
 
-      if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+      if (isDisabled(proposalId)) {
+        skipCount++;
+      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
         proposalIdsToPerformAction[actionsCount] = proposalId;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
         actionsCount++;
@@ -76,7 +75,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     }
 
     if (actionsCount > 0) {
-      // we do not know the length in advance, so we init arrays with the maxNumberOfActions
+      // we do not know the length in advance, so we init arrays with MAX_ACTIONS
       // and then squeeze the array using mstore
       assembly {
         mstore(proposalIdsToPerformAction, actionsCount)
@@ -85,7 +84,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       bytes memory performData = abi.encode(governanceV2, proposalIdsToPerformAction, actionStatesToPerformAction);
       return (true, performData);
     }
-      
+
     return (false, checkData);
   }
 
