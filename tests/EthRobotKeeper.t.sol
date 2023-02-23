@@ -8,10 +8,9 @@ import {GovernanceHelpers} from './helpers/GovernanceHelpers.sol';
 import 'forge-std/console.sol';
 
 contract EthRobotKeeperTest is Test {
-
   function testSimpleQueue() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
       16613098 // Feb-12-2023
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -28,7 +27,7 @@ contract EthRobotKeeperTest is Test {
 
   function testSimpleExecute() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
       16620260 // Feb-13-2023
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -45,7 +44,7 @@ contract EthRobotKeeperTest is Test {
 
   function testSimpleCancel() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
       12172974 // Apr-04-2021
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -64,7 +63,7 @@ contract EthRobotKeeperTest is Test {
   // final states -> (proposalId: 6: Cancelled) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Queued)
   function testMutilpleActions() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
       12172974 // Apr-04-2021
     );
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
@@ -74,7 +73,7 @@ contract EthRobotKeeperTest is Test {
     assertEq(uint256(proposal6State), 2);
     console.log('Initial State of Proposal 6: Active', uint256(proposal6State));
 
-    for (uint i=0; i<5; i++) {
+    for (uint i = 0; i < 5; i++) {
       governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Executed);
     }
     governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Succeeded);
@@ -92,14 +91,13 @@ contract EthRobotKeeperTest is Test {
     proposal12State = AaveGovernanceV2.GOV.getProposalState(12);
     assertEq(uint256(proposal12State), 5);
     console.log('Final State of Proposal 12: Queued', uint256(proposal12State));
-
   }
 
   // initial states -> (proposalId: 6: Active) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Succeeded)
   // final states -> (proposalId: 6: Succeeded) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Queued)
   function testMutilpleActionsWithOneDisabled() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz', 
+      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
       12172974 // Apr-04-2021
     );
 
@@ -116,7 +114,7 @@ contract EthRobotKeeperTest is Test {
     assertEq(uint256(proposal6State), 2);
     console.log('Initial State of Proposal 6: Active', uint256(proposal6State));
 
-    for (uint i=0; i<5; i++) {
+    for (uint i = 0; i < 5; i++) {
       governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Executed);
     }
     governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Succeeded);
@@ -136,10 +134,11 @@ contract EthRobotKeeperTest is Test {
   }
 
   function checkAndPerformUpKeep(EthRobotKeeper ethRobotKeeper) private {
-    (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(abi.encode(address(AaveGovernanceV2.GOV)));
+    (bool shouldRunKeeper, bytes memory performData) = ethRobotKeeper.checkUpkeep(
+      abi.encode(address(AaveGovernanceV2.GOV))
+    );
     if (shouldRunKeeper) {
       ethRobotKeeper.performUpkeep(performData);
     }
   }
-
 }

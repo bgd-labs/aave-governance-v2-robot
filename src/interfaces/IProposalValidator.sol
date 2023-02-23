@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {IAaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 
 interface IProposalValidator {
-
   /**
    * @dev Called to validate a proposal (e.g when creating new proposal in Governance)
    * @param governance Governance Contract
@@ -51,10 +50,10 @@ interface IProposalValidator {
    * @param blockNumber Blocknumber at which to evaluate
    * @return minimum Proposition Power needed
    **/
-  function getMinimumPropositionPowerNeeded(IAaveGovernanceV2 governance, uint256 blockNumber)
-    external
-    view
-    returns (uint256);
+  function getMinimumPropositionPowerNeeded(
+    IAaveGovernanceV2 governance,
+    uint256 blockNumber
+  ) external view returns (uint256);
 
   /**
    * @dev Returns whether a proposal passed or not
@@ -62,10 +61,10 @@ interface IProposalValidator {
    * @param proposalId Id of the proposal to set
    * @return true if proposal passed
    **/
-  function isProposalPassed(IAaveGovernanceV2 governance, uint256 proposalId)
-    external
-    view
-    returns (bool);
+  function isProposalPassed(
+    IAaveGovernanceV2 governance,
+    uint256 proposalId
+  ) external view returns (bool);
 
   /**
    * @dev Check whether a proposal has reached quorum, ie has enough FOR-voting-power
@@ -74,10 +73,10 @@ interface IProposalValidator {
    * @param proposalId Id of the proposal to verify
    * @return voting power needed for a proposal to pass
    **/
-  function isQuorumValid(IAaveGovernanceV2 governance, uint256 proposalId)
-    external
-    view
-    returns (bool);
+  function isQuorumValid(
+    IAaveGovernanceV2 governance,
+    uint256 proposalId
+  ) external view returns (bool);
 
   /**
    * @dev Check whether a proposal has enough extra FOR-votes than AGAINST-votes
@@ -86,10 +85,10 @@ interface IProposalValidator {
    * @param proposalId Id of the proposal to verify
    * @return true if enough For-Votes
    **/
-  function isVoteDifferentialValid(IAaveGovernanceV2 governance, uint256 proposalId)
-    external
-    view
-    returns (bool);
+  function isVoteDifferentialValid(
+    IAaveGovernanceV2 governance,
+    uint256 proposalId
+  ) external view returns (bool);
 
   /**
    * @dev Calculates the minimum amount of Voting Power needed for a proposal to Pass

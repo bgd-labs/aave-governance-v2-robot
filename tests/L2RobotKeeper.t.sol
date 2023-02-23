@@ -7,7 +7,6 @@ import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/
 import 'forge-std/console.sol';
 
 contract L2RobotKeeperTest is Test {
-
   function testSimpleExecutePolygon() public {
     vm.createSelectFork(
       'https://polygon-mainnet.g.alchemy.com/v2/rYCvre87pHXUBPFA0Shbg63H6VVCRZHq',
@@ -24,7 +23,10 @@ contract L2RobotKeeperTest is Test {
 
     actionsSetState = bridgeExecutor.getCurrentState(13);
     assertEq(uint256(actionsSetState), 1);
-    console.log('Final State of ActionsSet 13 after automation: Executed', uint256(actionsSetState));
+    console.log(
+      'Final State of ActionsSet 13 after automation: Executed',
+      uint256(actionsSetState)
+    );
   }
 
   function testSimpleExecuteArbitrum() public {
@@ -47,7 +49,9 @@ contract L2RobotKeeperTest is Test {
   }
 
   function checkAndPerformUpKeep(L2RobotKeeper l2RobotKeeper, address bridgeExecutor) private {
-    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(abi.encode(bridgeExecutor));
+    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(
+      abi.encode(bridgeExecutor)
+    );
     if (shouldRunKeeper) {
       l2RobotKeeper.performUpkeep(performData);
     }

@@ -6,9 +6,11 @@ import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {Vm} from 'forge-std/Vm.sol';
 
 contract GovernanceHelpers {
-
   // creates a dummy proposal with the specified proposal state
-  function createDummyProposal(Vm vm, IAaveGovernanceV2.ProposalState proposalState) external returns (uint256) {
+  function createDummyProposal(
+    Vm vm,
+    IAaveGovernanceV2.ProposalState proposalState
+  ) external returns (uint256) {
     GovHelpers.Payload memory payload = GovHelpers.buildMainnet(address(1));
     address[] memory targets = new address[](1);
     uint256[] memory values = new uint256[](1);
@@ -31,10 +33,7 @@ contract GovernanceHelpers {
       bytes32('ipfs')
     );
 
-    uint256 proposalId = GovHelpers.createTestProposal(
-      vm,
-      createParams
-    );
+    uint256 proposalId = GovHelpers.createTestProposal(vm, createParams);
 
     if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       GovHelpers.passVote(vm, proposalId);

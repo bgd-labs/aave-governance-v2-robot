@@ -14,8 +14,7 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
 contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
-
-  mapping (uint256 => bool) public disabledActionsSets;
+  mapping(uint256 => bool) public disabledActionsSets;
   uint256 constant MAX_ACTIONS = 25;
   uint256 constant MAX_SKIP = 20;
 
@@ -25,16 +24,11 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
    * @param checkData address of the bridge executor contract.
    */
-  function checkUpkeep(bytes calldata checkData)
-    external
-    view
-    override
-    returns (bool, bytes memory)
-  {
+  function checkUpkeep(
+    bytes calldata checkData
+  ) external view override returns (bool, bytes memory) {
     address executorAddress = abi.decode(checkData, (address));
-    IExecutorBase bridgeExecutor = IExecutorBase(
-      executorAddress
-    );
+    IExecutorBase bridgeExecutor = IExecutorBase(executorAddress);
 
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
@@ -78,19 +72,25 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @param performData bridge executor, actionsSet ids to execute.
    */
   function performUpkeep(bytes calldata performData) external override {
-    (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(performData, (IExecutorBase, uint256[]));
+    (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(
+      performData,
+      (IExecutorBase, uint256[])
+    );
 
     // executes action on actionSetIds in order from first to last
-    for (uint i=actionsSetIds.length; i>0; i--) {
-      if (canActionSetBeExecuted(actionsSetIds[i-1], bridgeExecutor)) {
-        bridgeExecutor.execute(actionsSetIds[i-1]);
+    for (uint i = actionsSetIds.length; i > 0; i--) {
+      if (canActionSetBeExecuted(actionsSetIds[i - 1], bridgeExecutor)) {
+        bridgeExecutor.execute(actionsSetIds[i - 1]);
       } else {
-        revert NoActionPerformed(actionsSetIds[i-1]);
+        revert NoActionPerformed(actionsSetIds[i - 1]);
       }
     }
   }
 
-  function canActionSetBeExecuted(uint256 actionsSetId, IExecutorBase bridgeExecutor) internal view returns (bool) {
+  function canActionSetBeExecuted(
+    uint256 actionsSetId,
+    IExecutorBase bridgeExecutor
+  ) internal view returns (bool) {
     IExecutorBase.ActionsSet memory actionsSet = bridgeExecutor.getActionsSetById(actionsSetId);
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(actionsSetId);
 

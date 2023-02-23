@@ -3,27 +3,32 @@
 Repository containing contracts for automating proposal actions for Governance V2 (currently) using Chainlink Automation.
 
 ### Keeper Contracts
+
 The keeper contracts are deployed and registered for each network supported and have the following 2 functions:
-* `checkUpKeep()`
+
+- `checkUpKeep()`
 
   This is called off-chain by Chainlink to check if `performUpKeep()` needs to be called.
   It checks all the proposals whether it can be moved to `Queued`, `Executed` or `Canceled` State and returns true with the action to perform if so.
 
   Conditions required to move a proposal to `Queued` state:
-    * If the current state of the proposal is `Succeeded`
+
+  - If the current state of the proposal is `Succeeded`
 
   Conditions required to move a proposal to `Executed` state:
-    * If the current state of the proposal is `Queued`
-    * If block.timestamp >= exectionTime (executionTime is set during queue as block.timestamp + delay)
-    * If block.timestamp <= executionTime + GRACE_PERIOD
+
+  - If the current state of the proposal is `Queued`
+  - If block.timestamp >= exectionTime (executionTime is set during queue as block.timestamp + delay)
+  - If block.timestamp <= executionTime + GRACE_PERIOD
 
   Conditions required to move a proposal to `Canceled` state:
-    * If the proposal is not already `Expired`, `Expired` or `Canceled`
-    * If the proposition power of proposal creator is less than the minimum proposition power needed
-    
-      Note: Proposals represented by ActionSetsId on L2 can only be `Canceled` by guardian.
 
-* `performUpKeep()`
+  - If the proposal is not already `Expired`, `Expired` or `Canceled`
+  - If the proposition power of proposal creator is less than the minimum proposition power needed
+
+    Note: Proposals represented by ActionSetsId on L2 can only be `Canceled` by guardian.
+
+- `performUpKeep()`
 
   This is called when `checkUpKeep()` returns true and calls the governance contract / bridge executor to `execute()` or `queue()`
 
