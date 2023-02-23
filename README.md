@@ -15,7 +15,6 @@ The keeper contracts are deployed and registered for each network supported and 
   Conditions required to move a proposal to `Executed` state:
     * If the current state of the proposal is `Queued`
     * If block.timestamp >= exectionTime (executionTime is set during queue as block.timestamp + delay)
-    * If block.timestamp <= executionTime + GRACE_PERIOD
 
   Conditions required to move a proposal to `Canceled` state:
     * If the proposal is not already `Expired`, `Expired` or `Canceled`
