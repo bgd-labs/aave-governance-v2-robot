@@ -16,6 +16,7 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledActionsSets;
+  uint256 constant MAX_ACTIONS = 25;
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
@@ -32,9 +33,8 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       executorAddress
     );
 
-    uint256 maxNumberOfActions = 25;
     uint256 actionsCount;
-    uint256[] memory actionsSetIdsToPerformExecute = new uint256[](maxNumberOfActions);
+    uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
     uint256 actionsSetCount = bridgeExecutor.getActionsSetCount();
     uint256 actionsSetStartLimit = 0;
@@ -46,13 +46,13 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       } 
  
       if (bridgeExecutor.getCurrentState(actionsSetId) == IExecutorBase.ActionsSetState.Executed) {
-        actionsSetId < 20 ? actionsSetStartLimit = 0 : actionsSetStartLimit = actionsSetId - 20;
+        actionsSetStartLimit = actionsSetId < 20 ? 0 : actionsSetId - 20;
         break;
       }
     }
 
     // iterate from an executed actionsSet minus 20 to be sure, also checks if actionsCount is less than the maxNumberOfActions
-    for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount && actionsCount < maxNumberOfActions; actionsSetId++) {
+    for (uint256 actionsSetId = actionsSetStartLimit; actionsSetId < actionsSetCount && actionsCount < MAX_ACTIONS; actionsSetId++) {
       if (canActionSetBeExecuted(actionsSetId, bridgeExecutor)) {
         actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
         actionsCount++;
@@ -91,8 +91,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     if (
       actionsSetState == IExecutorBase.ActionsSetState.Queued &&
-      block.timestamp >= actionsSet.executionTime &&
-      block.timestamp <= actionsSet.executionTime + bridgeExecutor.getGracePeriod()
+      block.timestamp >= actionsSet.executionTime
     ) {
       return true;
     }

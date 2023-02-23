@@ -16,6 +16,7 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   mapping (uint256 => bool) public disabledProposals;
+  uint256 constant MAX_ACTIONS = 25;
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
@@ -32,10 +33,9 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       governanceAddress
     );
 
-    uint256 maxNumberOfActions = 25;
     uint256 actionsCount;
-    uint256[] memory proposalIdsToPerformAction = new uint256[](maxNumberOfActions);
-    ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](maxNumberOfActions);
+    uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
+    ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
 
     uint256 proposalsCount = governanceV2.getProposalsCount();
     uint256 proposalsStartLimit = 0;
@@ -43,13 +43,13 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     // iterate from the last proposal till we find an executed proposal
     for (uint256 proposalId = proposalsCount - 1; proposalId >= 0; proposalId--) {
       if (governanceV2.getProposalState(proposalId) == IAaveGovernanceV2.ProposalState.Executed) {
-        proposalId < 20 ? proposalsStartLimit = 0 : proposalsStartLimit = proposalId - 20;
+        proposalsStartLimit = proposalId < 20 ? 0 : proposalId - 20;
         break;
       }
     }
 
-    // iterate from an executed proposal minus 20 to be sure, also checks if actionsCount is less than the maxNumberOfActions
-    for (uint256 proposalId = proposalsStartLimit; proposalId < proposalsCount && actionsCount < maxNumberOfActions; proposalId++) {
+    // iterate from an executed proposal minus 20 to be sure, also checks if actionsCount is less than the MAX_ACTIONS
+    for (uint256 proposalId = proposalsStartLimit; proposalId < proposalsCount && actionsCount < MAX_ACTIONS; proposalId++) {
 
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(proposalId);
       IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalId);
@@ -119,8 +119,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
   function canProposalBeExecuted(IAaveGovernanceV2.ProposalState proposalState, IAaveGovernanceV2.ProposalWithoutVotes memory proposal) internal view returns (bool) {
     if (
       proposalState == IAaveGovernanceV2.ProposalState.Queued && 
-      block.timestamp >= proposal.executionTime && 
-      block.timestamp <= proposal.executionTime + proposal.executor.GRACE_PERIOD()
+      block.timestamp >= proposal.executionTime
     ) {
       return true;
     }
