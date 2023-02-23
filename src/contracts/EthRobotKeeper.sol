@@ -33,31 +33,31 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
     ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
 
-    uint256 index = governanceV2.getProposalsCount();
+    uint256 proposalsCount = governanceV2.getProposalsCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
-    while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(index - 1);
+    while (proposalsCount != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
+      IAaveGovernanceV2.ProposalState proposalState = governanceV2.getProposalState(proposalsCount - 1);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(
-        index - 1
+        proposalsCount - 1
       );
 
-      if (isDisabled(index - 1)) {
+      if (isDisabled(proposalsCount - 1)) {
         skipCount++;
       } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
-        proposalIdsToPerformAction[actionsCount] = index - 1;
+        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
         actionsCount++;
         skipCount = 0;
       } else if (canProposalBeQueued(proposalState)) {
-        proposalIdsToPerformAction[actionsCount] = index - 1;
+        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformQueue;
         actionsCount++;
         skipCount = 0;
       } else if (canProposalBeExecuted(proposalState, proposal)) {
-        proposalIdsToPerformAction[actionsCount] = index - 1;
+        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformExecute;
         actionsCount++;
         skipCount = 0;
@@ -69,7 +69,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         skipCount++;
       }
 
-      index--;
+      proposalsCount--;
     }
 
     if (actionsCount > 0) {
