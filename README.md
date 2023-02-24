@@ -17,7 +17,7 @@ The keeper contracts are deployed and registered for each network supported and 
     * If block.timestamp >= exectionTime (executionTime is set during queue as block.timestamp + delay)
 
   Conditions required to move a proposal to `Canceled` state:
-    * If the proposal is not already `Expired`, `Expired` or `Canceled`
+    * If the proposal is not already `Expired`, `Executed` or `Canceled`
     * If the proposition power of proposal creator is less than the minimum proposition power needed
     
       Note: Proposals represented by ActionSetsId on L2 can only be `Canceled` by guardian.
