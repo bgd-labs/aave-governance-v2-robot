@@ -74,8 +74,11 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
       if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
-        BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]);
-        isActionPerformed = true;
+        try BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]) {
+          isActionPerformed = true;
+        } catch Error(string memory reason) {
+          emit ActionFailed(actionsSetIds[i - 1], ProposalAction.PerformExecute, reason);
+        }
       }
     }
 

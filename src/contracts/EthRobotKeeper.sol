@@ -86,6 +86,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     ActionWithId[] memory actionsWithIds = abi.decode(performData, (ActionWithId[]));
     bool isActionPerformed;
 
+    // executes action on proposalIds in order from first to last
     for (uint256 i = actionsWithIds.length; i > 0; i--) {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
         actionsWithIds[i - 1].id
@@ -94,25 +95,33 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         actionsWithIds[i - 1].id
       );
 
-      // executes action on proposalIds in order from first to last
       if (
         actionsWithIds[i - 1].action == ProposalAction.PerformCancel &&
         canProposalBeCancelled(proposalState, proposal)
       ) {
-        GOVERNANCE_V2.cancel(actionsWithIds[i - 1].id);
-        isActionPerformed = true;
+        try GOVERNANCE_V2.cancel(actionsWithIds[i - 1].id) {
+          isActionPerformed = true;
+        } catch Error(string memory reason) {
+          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+        }
       } else if (
         actionsWithIds[i - 1].action == ProposalAction.PerformQueue &&
         canProposalBeQueued(proposalState)
       ) {
-        GOVERNANCE_V2.queue(actionsWithIds[i - 1].id);
-        isActionPerformed = true;
+        try GOVERNANCE_V2.queue(actionsWithIds[i - 1].id) {
+          isActionPerformed = true;
+        } catch Error(string memory reason) {
+          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+        }
       } else if (
         actionsWithIds[i - 1].action == ProposalAction.PerformExecute &&
         canProposalBeExecuted(proposalState, proposal)
       ) {
-        GOVERNANCE_V2.execute(actionsWithIds[i - 1].id);
-        isActionPerformed = true;
+        try GOVERNANCE_V2.execute(actionsWithIds[i - 1].id) {
+          isActionPerformed = true;
+        } catch Error(string memory reason) {
+          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+        }
       }
     }
 
