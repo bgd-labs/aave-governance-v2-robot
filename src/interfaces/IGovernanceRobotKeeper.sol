@@ -21,6 +21,11 @@ interface IGovernanceRobotKeeper is KeeperCompatibleInterface {
     PerformCancel
   }
 
+  struct ActionWithId {
+    uint256 id;
+    ProposalAction action;
+  }
+
   /**
    * @notice method to check if a proposalId or actionsSetId is disabled.
    * @param id - proposalId or actionsSetId to check if disabled.

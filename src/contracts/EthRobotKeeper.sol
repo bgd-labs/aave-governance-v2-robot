@@ -28,15 +28,14 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
    */
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
-    uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
-    ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
+    ActionWithId[] memory actionsWithIds = new ActionWithId[](MAX_ACTIONS);
 
     uint256 proposalsCount = GOVERNANCE_V2.getProposalsCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
-    while (proposalsCount != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
+    while (proposalsCount != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
       IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
         proposalsCount - 1
       );
@@ -49,16 +48,16 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
           skipCount++;
         } else {
           if (canProposalBeCancelled(proposalState, proposal)) {
-            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
+            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].action = ProposalAction.PerformCancel;
             actionsCount++;
           } else if (canProposalBeQueued(proposalState)) {
-            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformQueue;
+            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].action = ProposalAction.PerformQueue;
             actionsCount++;
           } else if (canProposalBeExecuted(proposalState, proposal)) {
-            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformExecute;
+            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].action = ProposalAction.PerformExecute;
             actionsCount++;
           }
           skipCount = 0;
@@ -72,13 +71,9 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       // we do not know the length in advance, so we init arrays with MAX_ACTIONS
       // and then squeeze the array using mstore
       assembly {
-        mstore(proposalIdsToPerformAction, actionsCount)
-        mstore(actionStatesToPerformAction, actionsCount)
+        mstore(actionsWithIds, actionsCount)
       }
-      bytes memory performData = abi.encode(
-        proposalIdsToPerformAction,
-        actionStatesToPerformAction
-      );
+      bytes memory performData = abi.encode(actionsWithIds);
       return (true, performData);
     }
 
@@ -90,36 +85,33 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @param performData array of proposal ids, array of actions whether to queue, execute or cancel
    */
   function performUpkeep(bytes calldata performData) external override {
-    (
-      uint256[] memory proposalIdsToPerformAction,
-      ProposalAction[] memory actionStatesToPerformAction
-    ) = abi.decode(performData, (uint256[], ProposalAction[]));
-    for (uint256 i = proposalIdsToPerformAction.length; i > 0; i--) {
+    ActionWithId[] memory actionsWithIds = abi.decode(performData, (ActionWithId[]));
+    for (uint256 i = actionsWithIds.length; i > 0; i--) {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        proposalIdsToPerformAction[i - 1]
+        actionsWithIds[i - 1].id
       );
       IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
-        proposalIdsToPerformAction[i - 1]
+        actionsWithIds[i - 1].id
       );
 
       // executes action on proposalIds in order from first to last
       if (
-        actionStatesToPerformAction[i - 1] == ProposalAction.PerformCancel &&
+        actionsWithIds[i - 1].action == ProposalAction.PerformCancel &&
         canProposalBeCancelled(proposalState, proposal)
       ) {
-        GOVERNANCE_V2.cancel(proposalIdsToPerformAction[i - 1]);
+        GOVERNANCE_V2.cancel(actionsWithIds[i - 1].id);
       } else if (
-        actionStatesToPerformAction[i - 1] == ProposalAction.PerformQueue &&
+        actionsWithIds[i - 1].action == ProposalAction.PerformQueue &&
         canProposalBeQueued(proposalState)
       ) {
-        GOVERNANCE_V2.queue(proposalIdsToPerformAction[i - 1]);
+        GOVERNANCE_V2.queue(actionsWithIds[i - 1].id);
       } else if (
-        actionStatesToPerformAction[i - 1] == ProposalAction.PerformExecute &&
+        actionsWithIds[i - 1].action == ProposalAction.PerformExecute &&
         canProposalBeExecuted(proposalState, proposal)
       ) {
-        GOVERNANCE_V2.execute(proposalIdsToPerformAction[i - 1]);
+        GOVERNANCE_V2.execute(actionsWithIds[i - 1].id);
       } else {
-        revert NoActionCanBePerformed(proposalIdsToPerformAction[i - 1]);
+        revert NoActionCanBePerformed(actionsWithIds[i - 1].id);
       }
     }
   }
