@@ -18,7 +18,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
   uint256 public constant MAX_ACTIONS = 25;
   uint256 public constant MAX_SKIP = 20;
 
-  error NoActionCanBePerformed(uint proposalId);
+  error NoActionCanBePerformed();
 
   constructor(IAaveGovernanceV2 governanceV2Contract) {
     GOVERNANCE_V2 = governanceV2Contract;
@@ -36,9 +36,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
     while (currentId != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
-      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
-        currentId - 1
-      );
+      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(currentId - 1);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
         currentId - 1
       );
@@ -86,6 +84,8 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
    */
   function performUpkeep(bytes calldata performData) external override {
     ActionWithId[] memory actionsWithIds = abi.decode(performData, (ActionWithId[]));
+    bool isActionPerformed;
+
     for (uint256 i = actionsWithIds.length; i > 0; i--) {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
         actionsWithIds[i - 1].id
@@ -100,20 +100,23 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         canProposalBeCancelled(proposalState, proposal)
       ) {
         GOVERNANCE_V2.cancel(actionsWithIds[i - 1].id);
+        isActionPerformed = true;
       } else if (
         actionsWithIds[i - 1].action == ProposalAction.PerformQueue &&
         canProposalBeQueued(proposalState)
       ) {
         GOVERNANCE_V2.queue(actionsWithIds[i - 1].id);
+        isActionPerformed = true;
       } else if (
         actionsWithIds[i - 1].action == ProposalAction.PerformExecute &&
         canProposalBeExecuted(proposalState, proposal)
       ) {
         GOVERNANCE_V2.execute(actionsWithIds[i - 1].id);
-      } else {
-        revert NoActionCanBePerformed(actionsWithIds[i - 1].id);
+        isActionPerformed = true;
       }
     }
+
+    if (!isActionPerformed) revert NoActionCanBePerformed();
   }
 
   function isProposalInFinalState(

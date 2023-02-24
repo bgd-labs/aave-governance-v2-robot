@@ -18,7 +18,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   uint256 public constant MAX_ACTIONS = 25;
   uint256 public constant MAX_SKIP = 20;
 
-  error NoActionCanBePerformed(uint actionsSetId);
+  error NoActionCanBePerformed();
 
   constructor(IExecutorBase bridgeExecutorContract) {
     BRIDGE_EXECUTOR = bridgeExecutorContract;
@@ -69,15 +69,17 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
    */
   function performUpkeep(bytes calldata performData) external override {
     uint256[] memory actionsSetIds = abi.decode(performData, (uint256[]));
+    bool isActionPerformed;
 
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
       if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
         BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]);
-      } else {
-        revert NoActionCanBePerformed(actionsSetIds[i - 1]);
+        isActionPerformed = true;
       }
     }
+
+    if (!isActionPerformed) revert NoActionCanBePerformed();
   }
 
   function canActionSetBeExecuted(uint256 actionsSetId) internal view returns (bool) {
