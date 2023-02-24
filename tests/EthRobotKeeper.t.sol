@@ -10,7 +10,7 @@ import 'forge-std/console.sol';
 contract EthRobotKeeperTest is Test {
   function testSimpleQueue() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
+      'mainnet',
       16613098 // Feb-12-2023
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -27,7 +27,7 @@ contract EthRobotKeeperTest is Test {
 
   function testSimpleExecute() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
+      'mainnet',
       16620260 // Feb-13-2023
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -44,7 +44,7 @@ contract EthRobotKeeperTest is Test {
 
   function testSimpleCancel() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
+      'mainnet',
       12172974 // Apr-04-2021
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper();
@@ -63,7 +63,7 @@ contract EthRobotKeeperTest is Test {
   // final states -> (proposalId: 6: Cancelled) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Queued)
   function testMutilpleActions() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
+      'mainnet',
       12172974 // Apr-04-2021
     );
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
@@ -97,7 +97,7 @@ contract EthRobotKeeperTest is Test {
   // final states -> (proposalId: 6: Succeeded) ...(proposalId: 7 to 11: Executed)... (proposalId 12: Queued)
   function testMutilpleActionsWithOneDisabled() public {
     vm.createSelectFork(
-      'https://eth-mainnet.g.alchemy.com/v2/KsQvoVtnvpWhdPOlcK2Ks8u6COVwW_Uz',
+      'mainnet',
       12172974 // Apr-04-2021
     );
 

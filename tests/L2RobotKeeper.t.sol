@@ -9,7 +9,7 @@ import 'forge-std/console.sol';
 contract L2RobotKeeperTest is Test {
   function testSimpleExecutePolygon() public {
     vm.createSelectFork(
-      'https://polygon-mainnet.g.alchemy.com/v2/rYCvre87pHXUBPFA0Shbg63H6VVCRZHq',
+      'polygon',
       39099833 // Feb-09-2023
     );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
@@ -31,7 +31,7 @@ contract L2RobotKeeperTest is Test {
 
   function testSimpleExecuteArbitrum() public {
     vm.createSelectFork(
-      'https://arb-mainnet.g.alchemy.com/v2/4b5zYcMERmrGAlfneBy2n21k49HK1a-O',
+      'arbitrum',
       49297907 // Dec-28-2022
     );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
