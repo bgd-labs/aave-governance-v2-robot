@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {KeeperCompatibleInterface} from 'chainlink-brownie-contracts/KeeperCompatible.sol';
-import {IAaveGovernanceV2, IExecutorWithTimelock} from 'aave-address-book/AaveGovernanceV2.sol';
+import {IAaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/IExecutorBase.sol';
 import {IGovernanceRobotKeeper} from '../interfaces/IGovernanceRobotKeeper.sol';
 import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
