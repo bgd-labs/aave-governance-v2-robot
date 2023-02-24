@@ -36,15 +36,15 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // loops from the last actionsSetId until MAX_SKIP iterations, resets skipCount if it can be Executed
     while (actionsSetCount != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      if (isDisabled(actionsSetCount - 1)) {
-        skipCount++;
-      } else if (canActionSetBeExecuted(actionsSetCount - 1)) {
-        skipCount = 0;
-        actionsSetIdsToPerformExecute[actionsCount] = actionsSetCount - 1;
-        actionsCount++;
-      } else {
-        // it is in final state: executed/expired/cancelled
-        skipCount++;
+      if (!isDisabled(actionsSetCount - 1)) {
+        if (canActionSetBeExecuted(actionsSetCount - 1)) {
+          skipCount = 0;
+          actionsSetIdsToPerformExecute[actionsCount] = actionsSetCount - 1;
+          actionsCount++;
+        } else {
+          // it is in final state: executed/expired/cancelled
+          skipCount++;
+        }
       }
 
       actionsSetCount--;

@@ -44,29 +44,25 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         proposalsCount - 1
       );
 
-      if (isDisabled(proposalsCount - 1)) {
-        skipCount++;
-      } else if (canProposalBeCancelled(proposalState, proposal)) {
-        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-        actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
-        actionsCount++;
-        skipCount = 0;
-      } else if (canProposalBeQueued(proposalState)) {
-        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-        actionStatesToPerformAction[actionsCount] = ProposalAction.PerformQueue;
-        actionsCount++;
-        skipCount = 0;
-      } else if (canProposalBeExecuted(proposalState, proposal)) {
-        proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
-        actionStatesToPerformAction[actionsCount] = ProposalAction.PerformExecute;
-        actionsCount++;
-        skipCount = 0;
-      } else if (
-        proposalState != IAaveGovernanceV2.ProposalState.Active ||
-        proposalState != IAaveGovernanceV2.ProposalState.Pending
-      ) {
-        // in final state executed/cancelled/expired/failed
-        skipCount++;
+      if (!isDisabled(proposalsCount - 1)) {
+        if (isProposalInFinalState(proposalState)) {
+          skipCount++;
+        } else {
+          if (canProposalBeCancelled(proposalState, proposal)) {
+            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
+            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
+            actionsCount++;
+          } else if (canProposalBeQueued(proposalState)) {
+            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
+            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformQueue;
+            actionsCount++;
+          } else if (canProposalBeExecuted(proposalState, proposal)) {
+            proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
+            actionStatesToPerformAction[actionsCount] = ProposalAction.PerformExecute;
+            actionsCount++;
+          }
+          skipCount = 0;
+        }
       }
 
       proposalsCount--;
@@ -98,7 +94,6 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       uint256[] memory proposalIdsToPerformAction,
       ProposalAction[] memory actionStatesToPerformAction
     ) = abi.decode(performData, (uint256[], ProposalAction[]));
-
     for (uint256 i = proposalIdsToPerformAction.length; i > 0; i--) {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
         proposalIdsToPerformAction[i - 1]
@@ -127,6 +122,20 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         revert NoActionCanBePerformed(proposalIdsToPerformAction[i - 1]);
       }
     }
+  }
+
+  function isProposalInFinalState(
+    IAaveGovernanceV2.ProposalState proposalState
+  ) internal pure returns (bool) {
+    if (
+      proposalState == IAaveGovernanceV2.ProposalState.Executed ||
+      proposalState == IAaveGovernanceV2.ProposalState.Canceled ||
+      proposalState == IAaveGovernanceV2.ProposalState.Expired ||
+      proposalState == IAaveGovernanceV2.ProposalState.Failed
+    ) {
+      return true;
+    }
+    return false;
   }
 
   function canProposalBeQueued(
