@@ -14,11 +14,18 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
 contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
+  IAaveGovernanceV2 public immutable governanceV2;
   mapping(uint256 => bool) public disabledProposals;
   uint256 constant MAX_ACTIONS = 25;
   uint256 constant MAX_SKIP = 20;
 
   error NoActionPerformed(uint proposalId);
+
+  constructor(
+    IAaveGovernanceV2 governanceV2Contract
+  ) {
+    governanceV2 = governanceV2Contract;
+  }
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
@@ -27,8 +34,6 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(
     bytes calldata checkData
   ) external view override returns (bool, bytes memory) {
-    address governanceAddress = abi.decode(checkData, (address));
-    IAaveGovernanceV2 governanceV2 = IAaveGovernanceV2(governanceAddress);
 
     uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
     ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
@@ -46,7 +51,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
       if (isDisabled(proposalsCount - 1)) {
         skipCount++;
-      } else if (canProposalBeCancelled(proposalState, proposal, governanceV2)) {
+      } else if (canProposalBeCancelled(proposalState, proposal)) {
         proposalIdsToPerformAction[actionsCount] = proposalsCount - 1;
         actionStatesToPerformAction[actionsCount] = ProposalAction.PerformCancel;
         actionsCount++;
@@ -80,7 +85,6 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         mstore(actionStatesToPerformAction, actionsCount)
       }
       bytes memory performData = abi.encode(
-        governanceV2,
         proposalIdsToPerformAction,
         actionStatesToPerformAction
       );
@@ -96,10 +100,9 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
    */
   function performUpkeep(bytes calldata performData) external override {
     (
-      IAaveGovernanceV2 governanceV2,
       uint256[] memory proposalIdsToPerformAction,
       ProposalAction[] memory actionStatesToPerformAction
-    ) = abi.decode(performData, (IAaveGovernanceV2, uint256[], ProposalAction[]));
+    ) = abi.decode(performData, (uint256[], ProposalAction[]));
 
     for (uint256 i = proposalIdsToPerformAction.length; i > 0; i--) {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = governanceV2.getProposalById(
@@ -112,7 +115,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       // executes action on proposalIds in order from first to last
       if (
         actionStatesToPerformAction[i - 1] == ProposalAction.PerformCancel &&
-        canProposalBeCancelled(proposalState, proposal, governanceV2)
+        canProposalBeCancelled(proposalState, proposal)
       ) {
         governanceV2.cancel(proposalIdsToPerformAction[i - 1]);
       } else if (
@@ -152,8 +155,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   function canProposalBeCancelled(
     IAaveGovernanceV2.ProposalState proposalState,
-    IAaveGovernanceV2.ProposalWithoutVotes memory proposal,
-    IAaveGovernanceV2 governanceV2
+    IAaveGovernanceV2.ProposalWithoutVotes memory proposal
   ) internal view returns (bool) {
     IProposalValidator proposalValidator = IProposalValidator(address(proposal.executor));
     if (

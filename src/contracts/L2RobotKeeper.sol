@@ -14,11 +14,18 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
 contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
+  IExecutorBase public immutable bridgeExecutor;
   mapping(uint256 => bool) public disabledActionsSets;
   uint256 constant MAX_ACTIONS = 25;
   uint256 constant MAX_SKIP = 20;
 
   error NoActionPerformed(uint actionsSetId);
+
+  constructor(
+    IExecutorBase bridgeExecutorContract
+  ) {
+    bridgeExecutor = bridgeExecutorContract;
+  }
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
@@ -27,8 +34,6 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(
     bytes calldata checkData
   ) external view override returns (bool, bytes memory) {
-    address executorAddress = abi.decode(checkData, (address));
-    IExecutorBase bridgeExecutor = IExecutorBase(executorAddress);
 
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
@@ -40,7 +45,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
     while (actionsSetCount != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
       if (isDisabled(actionsSetCount - 1)) {
         skipCount++;
-      } else if (canActionSetBeExecuted(actionsSetCount - 1, bridgeExecutor)) {
+      } else if (canActionSetBeExecuted(actionsSetCount - 1)) {
         skipCount = 0;
         actionsSetIdsToPerformExecute[actionsCount] = actionsSetCount - 1;
         actionsCount++;
@@ -58,7 +63,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       assembly {
         mstore(actionsSetIdsToPerformExecute, actionsCount)
       }
-      bytes memory performData = abi.encode(bridgeExecutor, actionsSetIdsToPerformExecute);
+      bytes memory performData = abi.encode(actionsSetIdsToPerformExecute);
       return (true, performData);
     }
 
@@ -70,14 +75,14 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @param performData bridge executor, actionsSet ids to execute.
    */
   function performUpkeep(bytes calldata performData) external override {
-    (IExecutorBase bridgeExecutor, uint256[] memory actionsSetIds) = abi.decode(
+    (uint256[] memory actionsSetIds) = abi.decode(
       performData,
-      (IExecutorBase, uint256[])
+      (uint256[])
     );
 
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
-      if (canActionSetBeExecuted(actionsSetIds[i - 1], bridgeExecutor)) {
+      if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
         bridgeExecutor.execute(actionsSetIds[i - 1]);
       } else {
         revert NoActionPerformed(actionsSetIds[i - 1]);
@@ -86,8 +91,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   }
 
   function canActionSetBeExecuted(
-    uint256 actionsSetId,
-    IExecutorBase bridgeExecutor
+    uint256 actionsSetId
   ) internal view returns (bool) {
     IExecutorBase.ActionsSet memory actionsSet = bridgeExecutor.getActionsSetById(actionsSetId);
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(actionsSetId);

@@ -12,14 +12,14 @@ contract L2RobotKeeperTest is Test {
       'polygon',
       39099833 // Feb-09-2023
     );
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
-
     IExecutorBase bridgeExecutor = IExecutorBase(0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772);
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(bridgeExecutor);
+
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(13);
     assertEq(uint256(actionsSetState), 0);
     console.log('Initial State of ActionsSet 13: Queued', uint256(actionsSetState));
 
-    checkAndPerformUpKeep(l2RobotKeeper, address(bridgeExecutor));
+    checkAndPerformUpKeep(l2RobotKeeper);
 
     actionsSetState = bridgeExecutor.getCurrentState(13);
     assertEq(uint256(actionsSetState), 1);
@@ -34,24 +34,22 @@ contract L2RobotKeeperTest is Test {
       'arbitrum',
       49297907 // Dec-28-2022
     );
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper();
-
     IExecutorBase bridgeExecutor = IExecutorBase(0x7d9103572bE58FfE99dc390E8246f02dcAe6f611);
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(bridgeExecutor);
+
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(0);
     assertEq(uint256(actionsSetState), 0);
     console.log('Initial State of ActionsSet 0: Queued', uint256(actionsSetState));
 
-    checkAndPerformUpKeep(l2RobotKeeper, address(bridgeExecutor));
+    checkAndPerformUpKeep(l2RobotKeeper);
 
     actionsSetState = bridgeExecutor.getCurrentState(0);
     assertEq(uint256(actionsSetState), 1);
     console.log('Final State of ActionsSet 0 after automation: Executed', uint256(actionsSetState));
   }
 
-  function checkAndPerformUpKeep(L2RobotKeeper l2RobotKeeper, address bridgeExecutor) private {
-    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep(
-      abi.encode(bridgeExecutor)
-    );
+  function checkAndPerformUpKeep(L2RobotKeeper l2RobotKeeper) private {
+    (bool shouldRunKeeper, bytes memory performData) = l2RobotKeeper.checkUpkeep('');
     if (shouldRunKeeper) {
       l2RobotKeeper.performUpkeep(performData);
     }
