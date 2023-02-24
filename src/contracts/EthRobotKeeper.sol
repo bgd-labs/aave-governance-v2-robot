@@ -13,12 +13,12 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
 contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
-  mapping(uint256 => bool) public disabledProposals;
+  mapping(uint256 => bool) internal disabledProposals;
   IAaveGovernanceV2 public immutable GOVERNANCE_V2;
-  uint256 constant MAX_ACTIONS = 25;
-  uint256 constant MAX_SKIP = 20;
+  uint256 public constant MAX_ACTIONS = 25;
+  uint256 public constant MAX_SKIP = 20;
 
-  error NoActionPerformed(uint proposalId);
+  error NoActionCanBePerformed(uint proposalId);
 
   constructor(IAaveGovernanceV2 governanceV2Contract) {
     GOVERNANCE_V2 = governanceV2Contract;
@@ -26,11 +26,8 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
-   * @param checkData unused
    */
-  function checkUpkeep(
-    bytes calldata checkData
-  ) external view override returns (bool, bytes memory) {
+  function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     uint256[] memory proposalIdsToPerformAction = new uint256[](MAX_ACTIONS);
     ProposalAction[] memory actionStatesToPerformAction = new ProposalAction[](MAX_ACTIONS);
 
@@ -89,7 +86,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       return (true, performData);
     }
 
-    return (false, checkData);
+    return (false, '');
   }
 
   /**
@@ -127,7 +124,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       ) {
         GOVERNANCE_V2.execute(proposalIdsToPerformAction[i - 1]);
       } else {
-        revert NoActionPerformed(proposalIdsToPerformAction[i - 1]);
+        revert NoActionCanBePerformed(proposalIdsToPerformAction[i - 1]);
       }
     }
   }

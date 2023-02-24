@@ -13,12 +13,12 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
 contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
-  mapping(uint256 => bool) public disabledActionsSets;
+  mapping(uint256 => bool) internal disabledActionsSets;
   IExecutorBase public immutable BRIDGE_EXECUTOR;
-  uint256 constant MAX_ACTIONS = 25;
-  uint256 constant MAX_SKIP = 20;
+  uint256 public constant MAX_ACTIONS = 25;
+  uint256 public constant MAX_SKIP = 20;
 
-  error NoActionPerformed(uint actionsSetId);
+  error NoActionCanBePerformed(uint actionsSetId);
 
   constructor(IExecutorBase bridgeExecutorContract) {
     BRIDGE_EXECUTOR = bridgeExecutorContract;
@@ -26,11 +26,8 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
-   * @param checkData unused
    */
-  function checkUpkeep(
-    bytes calldata checkData
-  ) external view override returns (bool, bytes memory) {
+  function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
     uint256 actionsSetCount = BRIDGE_EXECUTOR.getActionsSetCount();
@@ -63,7 +60,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       return (true, performData);
     }
 
-    return (false, checkData);
+    return (false, '');
   }
 
   /**
@@ -78,7 +75,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
         BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]);
       } else {
-        revert NoActionPerformed(actionsSetIds[i - 1]);
+        revert NoActionCanBePerformed(actionsSetIds[i - 1]);
       }
     }
   }
