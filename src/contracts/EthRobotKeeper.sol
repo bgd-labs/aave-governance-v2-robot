@@ -30,33 +30,33 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     ActionWithId[] memory actionsWithIds = new ActionWithId[](MAX_ACTIONS);
 
-    uint256 proposalsCount = GOVERNANCE_V2.getProposalsCount();
+    uint256 currentId = GOVERNANCE_V2.getProposalsCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
-    while (proposalsCount != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
+    while (currentId != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
       IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
-        proposalsCount - 1
+        currentId - 1
       );
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        proposalsCount - 1
+        currentId - 1
       );
 
-      if (!isDisabled(proposalsCount - 1)) {
+      if (!isDisabled(currentId - 1)) {
         if (isProposalInFinalState(proposalState)) {
           skipCount++;
         } else {
           if (canProposalBeCancelled(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].id = currentId - 1;
             actionsWithIds[actionsCount].action = ProposalAction.PerformCancel;
             actionsCount++;
           } else if (canProposalBeQueued(proposalState)) {
-            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].id = currentId - 1;
             actionsWithIds[actionsCount].action = ProposalAction.PerformQueue;
             actionsCount++;
           } else if (canProposalBeExecuted(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = proposalsCount - 1;
+            actionsWithIds[actionsCount].id = currentId - 1;
             actionsWithIds[actionsCount].action = ProposalAction.PerformExecute;
             actionsCount++;
           }
@@ -64,7 +64,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         }
       }
 
-      proposalsCount--;
+      currentId--;
     }
 
     if (actionsCount > 0) {

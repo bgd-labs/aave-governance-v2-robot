@@ -30,16 +30,16 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
-    uint256 actionsSetCount = BRIDGE_EXECUTOR.getActionsSetCount();
+    uint256 currentId = BRIDGE_EXECUTOR.getActionsSetCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last actionsSetId until MAX_SKIP iterations, resets skipCount if it can be Executed
-    while (actionsSetCount != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      if (!isDisabled(actionsSetCount - 1)) {
-        if (canActionSetBeExecuted(actionsSetCount - 1)) {
+    while (currentId != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
+      if (!isDisabled(currentId - 1)) {
+        if (canActionSetBeExecuted(currentId - 1)) {
           skipCount = 0;
-          actionsSetIdsToPerformExecute[actionsCount] = actionsSetCount - 1;
+          actionsSetIdsToPerformExecute[actionsCount] = currentId - 1;
           actionsCount++;
         } else {
           // it is in final state: executed/expired/cancelled
@@ -47,7 +47,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
         }
       }
 
-      actionsSetCount--;
+      currentId--;
     }
 
     if (actionsCount > 0) {
