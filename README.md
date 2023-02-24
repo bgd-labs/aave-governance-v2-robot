@@ -22,14 +22,14 @@ The keeper contracts are deployed and registered for each network supported and 
 
   Conditions required to move a proposal to `Canceled` state:
 
-  - If the proposal is not already `Expired`, `Expired` or `Canceled`
+  - If the proposal is not already `Expired`, `Executed` or `Canceled`
   - If the proposition power of proposal creator is less than the minimum proposition power needed
 
     Note: Proposals represented by ActionSetsId on L2 can only be `Canceled` by guardian.
 
 - `performUpKeep()`
 
-  This is called when `checkUpKeep()` returns true and calls the governance contract / bridge executor to `execute()` or `queue()`
+  This is called when `checkUpKeep()` returns true and calls the governance contract / bridge executor to `execute()` `queue()` or `cancel()`
 
 ### Lifecycle of a proposal on ethereum ([reference](https://docs.aave.com/developers/guides/governance-guide/)):
 
