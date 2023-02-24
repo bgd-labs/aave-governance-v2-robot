@@ -27,7 +27,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev run off-chain, checks if proposal actionsSet should be moved to executed state.
-   * @param checkData address of the bridge executor contract.
+   * @param checkData unused
    */
   function checkUpkeep(
     bytes calldata checkData
@@ -69,7 +69,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev if actionsSet could be executed - performs execute action on the bridge executor contract.
-   * @param performData bridge executor, actionsSet ids to execute.
+   * @param performData actionsSet ids to execute.
    */
   function performUpkeep(bytes calldata performData) external override {
     uint256[] memory actionsSetIds = abi.decode(performData, (uint256[]));

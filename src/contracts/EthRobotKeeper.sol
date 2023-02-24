@@ -27,7 +27,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
-   * @param checkData address of the governance contract
+   * @param checkData unused
    */
   function checkUpkeep(
     bytes calldata checkData
@@ -95,7 +95,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
   /**
    * @dev if proposal could be queued/executed/cancelled - executes queue/cancel/execute action on the governance contract
-   * @param performData governance contract, array of proposal ids, array of actions whether to queue, execute or cancel
+   * @param performData array of proposal ids, array of actions whether to queue, execute or cancel
    */
   function performUpkeep(bytes calldata performData) external override {
     (
