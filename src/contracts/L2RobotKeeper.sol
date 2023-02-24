@@ -30,16 +30,18 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
-    uint256 currentId = BRIDGE_EXECUTOR.getActionsSetCount();
+    uint256 index = BRIDGE_EXECUTOR.getActionsSetCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last actionsSetId until MAX_SKIP iterations, resets skipCount if it can be Executed
-    while (currentId != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      if (!isDisabled(currentId - 1)) {
-        if (canActionSetBeExecuted(currentId - 1)) {
+    while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
+      uint256 currentId = index - 1;
+
+      if (!isDisabled(currentId)) {
+        if (canActionSetBeExecuted(currentId)) {
           skipCount = 0;
-          actionsSetIdsToPerformExecute[actionsCount] = currentId - 1;
+          actionsSetIdsToPerformExecute[actionsCount] = currentId;
           actionsCount++;
         } else {
           // it is in final state: executed/expired/cancelled
@@ -47,7 +49,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
         }
       }
 
-      currentId--;
+      index--;
     }
 
     if (actionsCount > 0) {
@@ -73,11 +75,13 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
-      if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
-        try BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]) {
+      uint256 currentId = i - 1;
+
+      if (canActionSetBeExecuted(actionsSetIds[currentId])) {
+        try BRIDGE_EXECUTOR.execute(actionsSetIds[currentId]) {
           isActionPerformed = true;
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsSetIds[i - 1], ProposalAction.PerformExecute, reason);
+          emit ActionFailed(actionsSetIds[currentId], ProposalAction.PerformExecute, reason);
         }
       }
     }

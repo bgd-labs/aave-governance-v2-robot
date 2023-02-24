@@ -30,31 +30,33 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     ActionWithId[] memory actionsWithIds = new ActionWithId[](MAX_ACTIONS);
 
-    uint256 currentId = GOVERNANCE_V2.getProposalsCount();
+    uint256 index = GOVERNANCE_V2.getProposalsCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
-    while (currentId != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
-      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(currentId - 1);
+    while (index != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
+      uint256 currentId = index - 1;
+
+      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(currentId);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        currentId - 1
+        currentId
       );
 
-      if (!isDisabled(currentId - 1)) {
+      if (!isDisabled(currentId)) {
         if (isProposalInFinalState(proposalState)) {
           skipCount++;
         } else {
           if (canProposalBeCancelled(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = currentId - 1;
+            actionsWithIds[actionsCount].id = currentId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformCancel;
             actionsCount++;
           } else if (canProposalBeQueued(proposalState)) {
-            actionsWithIds[actionsCount].id = currentId - 1;
+            actionsWithIds[actionsCount].id = currentId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformQueue;
             actionsCount++;
           } else if (canProposalBeExecuted(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = currentId - 1;
+            actionsWithIds[actionsCount].id = currentId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformExecute;
             actionsCount++;
           }
@@ -62,7 +64,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         }
       }
 
-      currentId--;
+      index--;
     }
 
     if (actionsCount > 0) {
@@ -88,39 +90,41 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // executes action on proposalIds in order from first to last
     for (uint256 i = actionsWithIds.length; i > 0; i--) {
+      uint256 currentId = i - 1;
+
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        actionsWithIds[i - 1].id
+        actionsWithIds[currentId].id
       );
       IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
-        actionsWithIds[i - 1].id
+        actionsWithIds[currentId].id
       );
 
       if (
-        actionsWithIds[i - 1].action == ProposalAction.PerformCancel &&
+        actionsWithIds[currentId].action == ProposalAction.PerformCancel &&
         canProposalBeCancelled(proposalState, proposal)
       ) {
-        try GOVERNANCE_V2.cancel(actionsWithIds[i - 1].id) {
+        try GOVERNANCE_V2.cancel(actionsWithIds[currentId].id) {
           isActionPerformed = true;
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }
       } else if (
-        actionsWithIds[i - 1].action == ProposalAction.PerformQueue &&
+        actionsWithIds[currentId].action == ProposalAction.PerformQueue &&
         canProposalBeQueued(proposalState)
       ) {
-        try GOVERNANCE_V2.queue(actionsWithIds[i - 1].id) {
+        try GOVERNANCE_V2.queue(actionsWithIds[currentId].id) {
           isActionPerformed = true;
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }
       } else if (
-        actionsWithIds[i - 1].action == ProposalAction.PerformExecute &&
+        actionsWithIds[currentId].action == ProposalAction.PerformExecute &&
         canProposalBeExecuted(proposalState, proposal)
       ) {
-        try GOVERNANCE_V2.execute(actionsWithIds[i - 1].id) {
+        try GOVERNANCE_V2.execute(actionsWithIds[currentId].id) {
           isActionPerformed = true;
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[i - 1].id, actionsWithIds[i - 1].action, reason);
+          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }
       }
     }
