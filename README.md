@@ -24,7 +24,7 @@ The keeper contracts are deployed and registered for each network supported and 
 
 * `performUpKeep()`
 
-  This is called when `checkUpKeep()` returns true and calls the governance contract / bridge executor to `execute()` or `queue()`
+  This is called when `checkUpKeep()` returns true and calls the governance contract / bridge executor to `execute()` `queue()` or `cancel()`
 
 ### Lifecycle of a proposal on ethereum ([reference](https://docs.aave.com/developers/guides/governance-guide/)):
 
