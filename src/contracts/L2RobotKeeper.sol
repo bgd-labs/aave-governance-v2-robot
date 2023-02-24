@@ -14,17 +14,15 @@ import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
 contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
-  IExecutorBase public immutable bridgeExecutor;
   mapping(uint256 => bool) public disabledActionsSets;
+  IExecutorBase public immutable BRIDGE_EXECUTOR;
   uint256 constant MAX_ACTIONS = 25;
   uint256 constant MAX_SKIP = 20;
 
   error NoActionPerformed(uint actionsSetId);
 
-  constructor(
-    IExecutorBase bridgeExecutorContract
-  ) {
-    bridgeExecutor = bridgeExecutorContract;
+  constructor(IExecutorBase bridgeExecutorContract) {
+    BRIDGE_EXECUTOR = bridgeExecutorContract;
   }
 
   /**
@@ -34,10 +32,9 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   function checkUpkeep(
     bytes calldata checkData
   ) external view override returns (bool, bytes memory) {
-
     uint256[] memory actionsSetIdsToPerformExecute = new uint256[](MAX_ACTIONS);
 
-    uint256 actionsSetCount = bridgeExecutor.getActionsSetCount();
+    uint256 actionsSetCount = BRIDGE_EXECUTOR.getActionsSetCount();
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
@@ -75,26 +72,21 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
    * @param performData bridge executor, actionsSet ids to execute.
    */
   function performUpkeep(bytes calldata performData) external override {
-    (uint256[] memory actionsSetIds) = abi.decode(
-      performData,
-      (uint256[])
-    );
+    uint256[] memory actionsSetIds = abi.decode(performData, (uint256[]));
 
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
       if (canActionSetBeExecuted(actionsSetIds[i - 1])) {
-        bridgeExecutor.execute(actionsSetIds[i - 1]);
+        BRIDGE_EXECUTOR.execute(actionsSetIds[i - 1]);
       } else {
         revert NoActionPerformed(actionsSetIds[i - 1]);
       }
     }
   }
 
-  function canActionSetBeExecuted(
-    uint256 actionsSetId
-  ) internal view returns (bool) {
-    IExecutorBase.ActionsSet memory actionsSet = bridgeExecutor.getActionsSetById(actionsSetId);
-    IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(actionsSetId);
+  function canActionSetBeExecuted(uint256 actionsSetId) internal view returns (bool) {
+    IExecutorBase.ActionsSet memory actionsSet = BRIDGE_EXECUTOR.getActionsSetById(actionsSetId);
+    IExecutorBase.ActionsSetState actionsSetState = BRIDGE_EXECUTOR.getCurrentState(actionsSetId);
 
     if (
       actionsSetState == IExecutorBase.ActionsSetState.Queued &&
