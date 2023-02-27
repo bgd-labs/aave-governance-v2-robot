@@ -40,6 +40,7 @@ contract ProposalPayloadArbitrumRobot {
   /**
    * @dev constructor of the proposal
    * @param keeperAddress the address of the chainlink keeper
+   * @param amountToFund the amount of link tokens to fund the keeper
    */
   constructor(address keeperAddress, uint256 amountToFund) {
     collectorController = ICollectorController(address(AaveV3Arbitrum.COLLECTOR_CONTROLLER));
