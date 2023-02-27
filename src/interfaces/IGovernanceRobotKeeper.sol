@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {KeeperCompatibleInterface} from 'chainlink-brownie-contracts/KeeperCompatible.sol';
+import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfaces/AutomationCompatibleInterface.sol';
 
 /**
  * @title IGovernanceRobotKeeper
  * @author BGD Labs
  * @notice Defines the interface for the contract to automate actions on aave governance proposals.
  **/
-interface IGovernanceRobotKeeper is KeeperCompatibleInterface {
+interface IGovernanceRobotKeeper is AutomationCompatibleInterface {
   event ActionFailed(uint256 id, ProposalAction action, string reason);
 
   /**

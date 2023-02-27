@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
-import {KeeperRegistryInterface, Config, State} from 'chainlink-brownie-contracts/interfaces/KeeperRegistryInterface.sol';
+import {AutomationRegistryInterface, Config, State} from 'chainlink-brownie-contracts/interfaces/AutomationRegistryInterface1_2.sol';
 import {KeeperRegistrarInterface} from './KeeperRegistrarInterface.sol';
 import {ICollectorController} from '../dependencies/ICollectorController.sol';
 import {AaveV3Polygon, AaveV3PolygonAssets} from 'aave-address-book/AaveV3Polygon.sol';
@@ -22,8 +22,8 @@ contract ProposalPayloadPolygonRobot {
   address public constant KEEPER_REGISTRAR_ADDRESS =
     address(0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d);
 
-  KeeperRegistryInterface public constant KEEPER_REGISTRY =
-    KeeperRegistryInterface(0x02777053d6764996e594c3E88AF1D58D5363a2e6);
+  AutomationRegistryInterface public constant KEEPER_REGISTRY =
+    AutomationRegistryInterface(0x02777053d6764996e594c3E88AF1D58D5363a2e6);
 
   LinkTokenInterface public constant ERC677_LINK =
     LinkTokenInterface(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
