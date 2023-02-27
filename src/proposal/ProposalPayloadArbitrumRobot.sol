@@ -5,35 +5,30 @@ import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTok
 import {KeeperRegistryInterface, Config, State} from 'chainlink-brownie-contracts/interfaces/KeeperRegistryInterface.sol';
 import {KeeperRegistrarInterface} from './KeeperRegistrarInterface.sol';
 import {ICollectorController} from '../dependencies/ICollectorController.sol';
-import {AaveV3Polygon, AaveV3PolygonAssets} from 'aave-address-book/AaveV3Polygon.sol';
-import {IPegSwap} from '../dependencies/IPegSwap.sol';
+import {AaveV3Arbitrum, AaveV3ArbitrumAssets} from 'aave-address-book/AaveV3Arbitrum.sol';
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
 
 /**
- * @title ProposalPayloadPolygonRobot
+ * @title ProposalPayloadArbitrumRobot
  * @author BGD Labs
- * @dev Proposal to register Chainlink Keeper for Polygon Bridge Executor
- * - Transfer aPolLINK tokens from AAVE treasury to the current address
- * - Withdraw aPolLINK them to get ERC-20 LINK
- * - Swaps ERC-20 LINK to ERC-677 LINK using PegSwap
- * - Register the Chainlink Keeper for Polygon Bridge Executor
+ * @dev Proposal to register Chainlink Keeper for Arbitrum Bridge Executor
+ * - Transfer aArbLINK tokens from AAVE treasury to the current address
+ * - Withdraw aArbLINK them to get LINK TOKEN
+ * - Register the Chainlink Keeper for Arbitrum Bridge Executor
  */
-contract ProposalPayloadPolygonRobot {
+contract ProposalPayloadArbitrumRobot {
   address public constant KEEPER_REGISTRAR_ADDRESS =
-    address(0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d);
+    address(0x4F3AF332A30973106Fe146Af0B4220bBBeA748eC);
 
   KeeperRegistryInterface public constant KEEPER_REGISTRY =
-    KeeperRegistryInterface(0x02777053d6764996e594c3E88AF1D58D5363a2e6);
+    KeeperRegistryInterface(0x75c0530885F385721fddA23C539AF3701d6183D4);
 
-  LinkTokenInterface public constant ERC677_LINK =
-    LinkTokenInterface(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
+  LinkTokenInterface public immutable LINK_TOKEN;
 
-  IPegSwap public constant PEGSWAP = IPegSwap(0xAA1DC356dc4B18f30C347798FD5379F3D77ABC5b);
   ICollectorController public immutable collectorController;
-  address public immutable POLYGON_ROBOT_KEEPER_ADDRESS;
+  address public immutable ARBITRUM_ROBOT_KEEPER_ADDRESS;
   uint256 public immutable LINK_AMOUNT;
-  IERC20 public immutable A_POLYGON_LINK_TOKEN;
-  IERC20 public immutable ERC20_LINK;
+  IERC20 public immutable A_ARBITRUM_LINK_TOKEN;
 
   /**
    * @dev emitted when the new upkeep is registered in Chainlink
@@ -47,40 +42,26 @@ contract ProposalPayloadPolygonRobot {
    * @param keeperAddress the address of the chainlink keeper
    */
   constructor(address keeperAddress, uint256 amountToFund) {
-    collectorController = ICollectorController(address(AaveV3Polygon.COLLECTOR_CONTROLLER));
+    collectorController = ICollectorController(address(AaveV3Arbitrum.COLLECTOR_CONTROLLER));
 
-    A_POLYGON_LINK_TOKEN = IERC20(AaveV3PolygonAssets.LINK_A_TOKEN);
-    ERC20_LINK = IERC20(AaveV3PolygonAssets.LINK_UNDERLYING);
-    POLYGON_ROBOT_KEEPER_ADDRESS = keeperAddress;
+    A_ARBITRUM_LINK_TOKEN = IERC20(AaveV3ArbitrumAssets.LINK_A_TOKEN);
+    LINK_TOKEN = LinkTokenInterface(AaveV3ArbitrumAssets.LINK_UNDERLYING);
+    ARBITRUM_ROBOT_KEEPER_ADDRESS = keeperAddress;
     LINK_AMOUNT = amountToFund;
   }
 
   function execute() external {
-    // Transfer aPolLink from treasury to this address
-    collectorController.transfer(
-      AaveV3Polygon.COLLECTOR,
-      address(A_POLYGON_LINK_TOKEN),
-      address(this),
-      LINK_AMOUNT
-    );
+    // Transfer aArbLink from treasury to this address
+    collectorController.transfer(address(A_ARBITRUM_LINK_TOKEN), address(this), LINK_AMOUNT);
 
-    // Withdraw aPolLink from the Aave V3 Pool
-    AaveV3Polygon.POOL.withdraw(address(ERC20_LINK), type(uint256).max, address(this));
-
-    // Swap ERC-20 Link to ERC-677 Link
-    require(
-      PEGSWAP.getSwappableAmount(address(ERC20_LINK), address(ERC677_LINK)) > LINK_AMOUNT,
-      'INSUFFICIENT_LIQUIDITY'
-    );
-
-    ERC20_LINK.approve(address(PEGSWAP), LINK_AMOUNT);
-    PEGSWAP.swap(LINK_AMOUNT, address(ERC20_LINK), address(ERC677_LINK));
+    // Withdraw aArbLink from the Aave V3 Pool
+    AaveV3Arbitrum.POOL.withdraw(address(LINK_TOKEN), type(uint256).max, address(this));
 
     //TODO: Configure gasLimit, safeCast?
-    // create chainlink upkeep for polygon governance robot
+    // create chainlink upkeep for arbitrum governance robot
     registerUpkeep(
-      'AavePolygonRobotKeeperV2',
-      POLYGON_ROBOT_KEEPER_ADDRESS,
+      'AaveArbitrumRobotKeeperV2',
+      ARBITRUM_ROBOT_KEEPER_ADDRESS,
       5000000,
       address(this),
       abi.encode(),
@@ -121,7 +102,7 @@ contract ProposalPayloadPolygonRobot {
 
     bytes4 registerSig = KeeperRegistrarInterface.register.selector;
 
-    ERC677_LINK.transferAndCall(
+    LINK_TOKEN.transferAndCall(
       KEEPER_REGISTRAR_ADDRESS,
       amount,
       bytes.concat(registerSig, payload)

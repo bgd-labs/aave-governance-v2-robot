@@ -21,7 +21,7 @@ contract Deploy is Script {
     keeper.transferOwnership(GUARDIAN);
 
     // create proposal here and pass the keeper address and the link amount to fund
-    proposal = new ProposalPayloadPolygonRobot(address(keeper), 100 ether);
+    proposal = new ProposalPayloadPolygonRobot(address(keeper), 50 ether);
 
     console.log('Polygon keeper address', address(keeper));
     console.log('Polygon payload address', address(proposal));
