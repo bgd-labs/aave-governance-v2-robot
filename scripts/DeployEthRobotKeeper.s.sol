@@ -23,6 +23,5 @@ contract Deploy is Script {
     console.log('Ethereum keeper address', address(keeper));
     console.log('Ethereum payload address', address(proposal));
     vm.stopBroadcast();
-    vm.stopBroadcast();
   }
 }
