@@ -8,7 +8,7 @@ The smart contracts performing automated actions on Governance V2 and Bridge Exe
 
 Each proposal on ethereum is represented by `proposalId` and has the following states: `Pending`, `Canceled`, `Active`, `Failed`, `Succeeded`, `Queued`, `Expired`, `Executed`.
 
-<img width="1468" alt="Screenshot 2023-02-20 at 11 35 57 AM" src="https://user-images.githubusercontent.com/22850280/220023358-26dcafca-1ced-4cfb-9423-481a0a52cd50.png">
+<img width="1379" alt="Screenshot 2023-03-01 at 11 08 58 AM" src="https://user-images.githubusercontent.com/22850280/222054518-0331ca20-5be5-4c15-9329-27440e4ade90.png">
 
 Actions such as moving a proposal to `Queued`, `Executed` or `Canceled` state are public and is performed automatically by the keeper on the governance-v2 ethereum contract when the conditions are met.
 
@@ -34,7 +34,7 @@ Each Cross chain proposal on the L2 is represented by a `ActionSetsId` and has t
 Cross chain proposals after being `Executed` on ethereum are then relayed to the destination chain and are `Queued` automatically.
 Post the actionsSetId is moved to `Queued`, the action to move move the state to `Executed` is public and is called automatically by the keeper on the `BridgeExecutor` contract.
 
-<img width="1110" alt="Screenshot 2023-02-20 at 11 58 08 AM" src="https://user-images.githubusercontent.com/22850280/220028962-f0050e33-8731-48aa-b65c-0ff92cb60e7c.png">
+<img width="1192" alt="Screenshot 2023-03-01 at 11 07 18 AM" src="https://user-images.githubusercontent.com/22850280/222054267-e45abc1d-8cca-4c0c-8b2b-73c3df2b0f8b.png">
 
   Conditions required to move a `ActionsSetId` to `Executed` state:
 
