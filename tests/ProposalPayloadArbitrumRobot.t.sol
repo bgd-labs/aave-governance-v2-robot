@@ -14,7 +14,7 @@ contract ProposalPayloadArbitrumRobotTest is TestWithExecutor {
   function setUp() public {
     vm.createSelectFork(
       'arbitrum',
-      65038424 // Feb-27-2023 
+      65038424 // Feb-27-2023
     );
     _selectPayloadExecutor(AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR);
   }

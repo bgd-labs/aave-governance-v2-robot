@@ -56,7 +56,6 @@ contract ProposalPayloadEthRobot {
       LINK_AMOUNT
     );
 
-    //TODO: Configure gasLimit, safeCast?
     // create chainlink upkeep for eth governance robot
     registerUpkeep(
       'AaveEthRobotKeeperV2',
@@ -64,7 +63,7 @@ contract ProposalPayloadEthRobot {
       5000000,
       address(this),
       abi.encode(),
-      uint96(LINK_AMOUNT)
+      safeToUint96(LINK_AMOUNT)
     );
   }
 
@@ -120,5 +119,10 @@ contract ProposalPayloadEthRobot {
     } else {
       revert('auto-approve disabled');
     }
+  }
+
+  function safeToUint96(uint256 value) internal pure returns (uint96) {
+    require(value <= type(uint96).max, 'Value doesnt fit in 96 bits');
+    return uint96(value);
   }
 }

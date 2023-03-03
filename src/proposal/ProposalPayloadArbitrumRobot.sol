@@ -58,7 +58,6 @@ contract ProposalPayloadArbitrumRobot {
     // Withdraw aArbLink from the Aave V3 Pool
     AaveV3Arbitrum.POOL.withdraw(address(LINK_TOKEN), type(uint256).max, address(this));
 
-    //TODO: Configure gasLimit, safeCast?
     // create chainlink upkeep for arbitrum governance robot
     registerUpkeep(
       'AaveArbitrumRobotKeeperV2',
@@ -66,7 +65,7 @@ contract ProposalPayloadArbitrumRobot {
       5000000,
       address(this),
       abi.encode(),
-      uint96(LINK_AMOUNT)
+      safeToUint96(LINK_AMOUNT)
     );
   }
 
@@ -122,5 +121,10 @@ contract ProposalPayloadArbitrumRobot {
     } else {
       revert('auto-approve disabled');
     }
+  }
+
+  function safeToUint96(uint256 value) internal pure returns (uint96) {
+    require(value <= type(uint96).max, 'Value doesnt fit in 96 bits');
+    return uint96(value);
   }
 }
