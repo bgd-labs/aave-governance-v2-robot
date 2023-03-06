@@ -6,20 +6,22 @@ import {GovHelpers} from 'aave-helpers/GovHelpers.sol';
 import {Vm} from 'forge-std/Vm.sol';
 
 contract GovernanceHelpers {
-
   // creates a dummy proposal with the specified proposal state
-  function createDummyProposal(Vm vm, IAaveGovernanceV2.ProposalState proposalState) external returns (uint256) {
-    GovHelpers.Payload memory payload = GovHelpers.buildMainnet(address(1));
+  function createDummyProposal(
+    Vm vm,
+    IAaveGovernanceV2.ProposalState proposalState
+  ) external returns (uint256) {
     address[] memory targets = new address[](1);
     uint256[] memory values = new uint256[](1);
     string[] memory signatures = new string[](1);
     bytes[] memory calldatas = new bytes[](1);
     bool[] memory withDelegatecalls = new bool[](1);
-    targets[0] = payload.target;
-    signatures[0] = payload.signature;
-    calldatas[0] = payload.callData;
+
+    targets[0] = address(1);
+    signatures[0] = '';
+    calldatas[0] = '';
     values[0] = 0;
-    withDelegatecalls[0] = true;
+    withDelegatecalls[0] = false;
 
     GovHelpers.SPropCreateParams memory createParams = GovHelpers.SPropCreateParams(
       AaveGovernanceV2.SHORT_EXECUTOR,
@@ -31,10 +33,7 @@ contract GovernanceHelpers {
       bytes32('ipfs')
     );
 
-    uint256 proposalId = GovHelpers.createTestProposal(
-      vm,
-      createParams
-    );
+    uint256 proposalId = GovHelpers.createTestProposal(vm, createParams);
 
     if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       GovHelpers.passVote(vm, proposalId);
