@@ -80,6 +80,7 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
       if (canActionSetBeExecuted(actionsSetIds[currentId])) {
         try BRIDGE_EXECUTOR.execute(actionsSetIds[currentId]) {
           isActionPerformed = true;
+          emit ActionSucceeded(actionsSetIds[currentId], ProposalAction.PerformExecute);
         } catch Error(string memory reason) {
           emit ActionFailed(actionsSetIds[currentId], ProposalAction.PerformExecute, reason);
         }

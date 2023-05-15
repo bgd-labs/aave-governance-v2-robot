@@ -105,6 +105,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       ) {
         try GOVERNANCE_V2.cancel(actionsWithIds[currentId].id) {
           isActionPerformed = true;
+          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
         } catch Error(string memory reason) {
           emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }
@@ -114,6 +115,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       ) {
         try GOVERNANCE_V2.queue(actionsWithIds[currentId].id) {
           isActionPerformed = true;
+          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
         } catch Error(string memory reason) {
           emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }
@@ -123,6 +125,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
       ) {
         try GOVERNANCE_V2.execute(actionsWithIds[currentId].id) {
           isActionPerformed = true;
+          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
         } catch Error(string memory reason) {
           emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
         }

@@ -9,7 +9,9 @@ import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfa
  * @notice Defines the interface for the contract to automate actions on aave governance proposals.
  **/
 interface IGovernanceRobotKeeper is AutomationCompatibleInterface {
-  event ActionFailed(uint256 id, ProposalAction action, string reason);
+  event ActionFailed(uint256 indexed id, ProposalAction indexed action, string reason);
+
+  event ActionSucceeded(uint256 indexed id, ProposalAction indexed action);
 
   /**
    * @notice Actions that can be performed by the robot on the governance v2. Not used by L2 Robot as we only need to perform execute.
