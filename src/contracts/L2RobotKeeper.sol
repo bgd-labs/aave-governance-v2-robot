@@ -36,12 +36,12 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // loops from the last actionsSetId until MAX_SKIP iterations, resets skipCount if it can be Executed
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
-      uint256 currentId = index - 1;
+      uint256 actionsSetId = index - 1;
 
-      if (!isDisabled(currentId)) {
-        if (canActionSetBeExecuted(currentId)) {
+      if (!isDisabled(actionsSetId)) {
+        if (_canActionSetBeExecuted(actionsSetId)) {
           skipCount = 0;
-          actionsSetIdsToPerformExecute[actionsCount] = currentId;
+          actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
           actionsCount++;
         } else {
           // it is in final state: executed/expired/cancelled
@@ -75,32 +75,19 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // executes action on actionSetIds in order from first to last
     for (uint i = actionsSetIds.length; i > 0; i--) {
-      uint256 currentId = i - 1;
+      uint256 actionsSetId = actionsSetIds[i - 1];
 
-      if (canActionSetBeExecuted(actionsSetIds[currentId])) {
-        try BRIDGE_EXECUTOR.execute(actionsSetIds[currentId]) {
+      if (_canActionSetBeExecuted(actionsSetId)) {
+        try BRIDGE_EXECUTOR.execute(actionsSetId) {
           isActionPerformed = true;
-          emit ActionSucceeded(actionsSetIds[currentId], ProposalAction.PerformExecute);
+          emit ActionSucceeded(actionsSetId, ProposalAction.PerformExecute);
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsSetIds[currentId], ProposalAction.PerformExecute, reason);
+          emit ActionFailed(actionsSetId, ProposalAction.PerformExecute, reason);
         }
       }
     }
 
     if (!isActionPerformed) revert NoActionCanBePerformed();
-  }
-
-  function canActionSetBeExecuted(uint256 actionsSetId) internal view returns (bool) {
-    IExecutorBase.ActionsSet memory actionsSet = BRIDGE_EXECUTOR.getActionsSetById(actionsSetId);
-    IExecutorBase.ActionsSetState actionsSetState = BRIDGE_EXECUTOR.getCurrentState(actionsSetId);
-
-    if (
-      actionsSetState == IExecutorBase.ActionsSetState.Queued &&
-      block.timestamp >= actionsSet.executionTime
-    ) {
-      return true;
-    }
-    return false;
   }
 
   /// @inheritdoc IGovernanceRobotKeeper
@@ -111,5 +98,18 @@ contract L2RobotKeeper is Ownable, IGovernanceRobotKeeper {
   /// @inheritdoc IGovernanceRobotKeeper
   function disableAutomation(uint256 id) external onlyOwner {
     disabledActionsSets[id] = true;
+  }
+
+  function _canActionSetBeExecuted(uint256 actionsSetId) internal view returns (bool) {
+    IExecutorBase.ActionsSet memory actionsSet = BRIDGE_EXECUTOR.getActionsSetById(actionsSetId);
+    IExecutorBase.ActionsSetState actionsSetState = BRIDGE_EXECUTOR.getCurrentState(actionsSetId);
+
+    if (
+      actionsSetState == IExecutorBase.ActionsSetState.Queued &&
+      block.timestamp >= actionsSet.executionTime
+    ) {
+      return true;
+    }
+    return false;
   }
 }

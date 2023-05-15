@@ -36,27 +36,27 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
-      uint256 currentId = index - 1;
+      uint256 proposalId = index - 1;
 
-      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(currentId);
+      IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(proposalId);
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        currentId
+        proposalId
       );
 
-      if (!isDisabled(currentId)) {
-        if (isProposalInFinalState(proposalState)) {
+      if (!isDisabled(proposalId)) {
+        if (_isProposalInFinalState(proposalState)) {
           skipCount++;
         } else {
-          if (canProposalBeCancelled(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = currentId;
+          if (_canProposalBeCancelled(proposalState, proposal)) {
+            actionsWithIds[actionsCount].id = proposalId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformCancel;
             actionsCount++;
-          } else if (canProposalBeQueued(proposalState)) {
-            actionsWithIds[actionsCount].id = currentId;
+          } else if (_canProposalBeQueued(proposalState)) {
+            actionsWithIds[actionsCount].id = proposalId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformQueue;
             actionsCount++;
-          } else if (canProposalBeExecuted(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = currentId;
+          } else if (_canProposalBeExecuted(proposalState, proposal)) {
+            actionsWithIds[actionsCount].id = proposalId;
             actionsWithIds[actionsCount].action = ProposalAction.PerformExecute;
             actionsCount++;
           }
@@ -90,44 +90,45 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
 
     // executes action on proposalIds in order from first to last
     for (uint256 i = actionsWithIds.length; i > 0; i--) {
-      uint256 currentId = i - 1;
+      uint256 proposalId = actionsWithIds[i - 1].id;
+      ProposalAction action = actionsWithIds[i - 1].action;
 
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = GOVERNANCE_V2.getProposalById(
-        actionsWithIds[currentId].id
+        proposalId
       );
       IAaveGovernanceV2.ProposalState proposalState = GOVERNANCE_V2.getProposalState(
-        actionsWithIds[currentId].id
+        proposalId
       );
 
       if (
-        actionsWithIds[currentId].action == ProposalAction.PerformCancel &&
-        canProposalBeCancelled(proposalState, proposal)
+        action == ProposalAction.PerformCancel &&
+        _canProposalBeCancelled(proposalState, proposal)
       ) {
-        try GOVERNANCE_V2.cancel(actionsWithIds[currentId].id) {
+        try GOVERNANCE_V2.cancel(proposalId) {
           isActionPerformed = true;
-          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
+          emit ActionSucceeded(proposalId, action);
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
+          emit ActionFailed(proposalId, action, reason);
         }
       } else if (
-        actionsWithIds[currentId].action == ProposalAction.PerformQueue &&
-        canProposalBeQueued(proposalState)
+        action == ProposalAction.PerformQueue &&
+        _canProposalBeQueued(proposalState)
       ) {
-        try GOVERNANCE_V2.queue(actionsWithIds[currentId].id) {
+        try GOVERNANCE_V2.queue(proposalId) {
           isActionPerformed = true;
-          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
+          emit ActionSucceeded(proposalId, action);
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
+          emit ActionFailed(proposalId, action, reason);
         }
       } else if (
-        actionsWithIds[currentId].action == ProposalAction.PerformExecute &&
-        canProposalBeExecuted(proposalState, proposal)
+        action == ProposalAction.PerformExecute &&
+        _canProposalBeExecuted(proposalState, proposal)
       ) {
-        try GOVERNANCE_V2.execute(actionsWithIds[currentId].id) {
+        try GOVERNANCE_V2.execute(proposalId) {
           isActionPerformed = true;
-          emit ActionSucceeded(actionsWithIds[currentId].id, actionsWithIds[currentId].action);
+          emit ActionSucceeded(proposalId, action);
         } catch Error(string memory reason) {
-          emit ActionFailed(actionsWithIds[currentId].id, actionsWithIds[currentId].action, reason);
+          emit ActionFailed(proposalId, action, reason);
         }
       }
     }
@@ -135,7 +136,17 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     if (!isActionPerformed) revert NoActionCanBePerformed();
   }
 
-  function isProposalInFinalState(
+  /// @inheritdoc IGovernanceRobotKeeper
+  function isDisabled(uint256 id) public view returns (bool) {
+    return disabledProposals[id];
+  }
+
+  /// @inheritdoc IGovernanceRobotKeeper
+  function disableAutomation(uint256 id) external onlyOwner {
+    disabledProposals[id] = true;
+  }
+
+  function _isProposalInFinalState(
     IAaveGovernanceV2.ProposalState proposalState
   ) internal pure returns (bool) {
     if (
@@ -149,13 +160,13 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     return false;
   }
 
-  function canProposalBeQueued(
+  function _canProposalBeQueued(
     IAaveGovernanceV2.ProposalState proposalState
   ) internal pure returns (bool) {
     return proposalState == IAaveGovernanceV2.ProposalState.Succeeded;
   }
 
-  function canProposalBeExecuted(
+  function _canProposalBeExecuted(
     IAaveGovernanceV2.ProposalState proposalState,
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal
   ) internal view returns (bool) {
@@ -168,7 +179,7 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
     return false;
   }
 
-  function canProposalBeCancelled(
+  function _canProposalBeCancelled(
     IAaveGovernanceV2.ProposalState proposalState,
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal
   ) internal view returns (bool) {
@@ -186,15 +197,5 @@ contract EthRobotKeeper is Ownable, IGovernanceRobotKeeper {
         proposal.creator,
         block.number - 1
       );
-  }
-
-  /// @inheritdoc IGovernanceRobotKeeper
-  function isDisabled(uint256 id) public view returns (bool) {
-    return disabledProposals[id];
-  }
-
-  /// @inheritdoc IGovernanceRobotKeeper
-  function disableAutomation(uint256 id) external onlyOwner {
-    disabledProposals[id] = true;
   }
 }
