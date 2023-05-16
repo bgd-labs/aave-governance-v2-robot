@@ -2,7 +2,7 @@
 
 Repository containing contracts for automating governance actions for Aave Governance V2 and Aave Cross-Chain-Governance using Chainlink Automation.
 
-The smart contracts performing automated actions on Governance V2 and Bridge Executors for cross-chain proposals are completely permissionless with the cost of running the keeper covered by the Aave DAO.
+The smart contracts performing automated actions on Governance V2 and Bridge Executors for cross-chain proposals are completely permissionless with the cost of running the keeper to be covered by the Aave DAO.
 
 ### Lifecycle of a proposal on ethereum ([reference](https://docs.aave.com/developers/guides/governance-guide/)):
 
