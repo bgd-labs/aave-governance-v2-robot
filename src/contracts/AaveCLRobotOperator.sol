@@ -40,10 +40,10 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     address fundsAdmin,
     address maintenanceAdmin
   ) {
+    LINK_TOKEN = linkTokenAddress;
+    _linkWithdrawAddress = linkWithdrawAddress;
     _fundsAdmin = fundsAdmin;
     _maintenanceAdmin = maintenanceAdmin;
-    _linkWithdrawAddress = linkWithdrawAddress;
-    LINK_TOKEN = linkTokenAddress;
   }
 
   function register(
@@ -53,7 +53,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     bytes memory checkData,
     uint96 amountToFund,
     address keeperRegistry,
-    address keeperRegistrer
+    address keeperRegistrar
   ) external onlyFundsAdmin returns (uint256) {
     (IKeeperRegistry.State memory state,,) = IKeeperRegistry(keeperRegistry).getState();
     uint256 oldNonce = state.nonce;
@@ -71,7 +71,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     );
     bytes4 registerSig = IKeeperRegistrar.register.selector;
     LinkTokenInterface(LINK_TOKEN).transferAndCall(
-      keeperRegistrer,
+      keeperRegistrar,
       amountToFund,
       bytes.concat(registerSig, payload)
     );
@@ -86,7 +86,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
       keepers[id].name = name;
       keepers[id].upkeep = upkeepContract;
       keepers[id].registry = keeperRegistry;
-      keepers[id].registrer = keeperRegistrer;
+      keepers[id].registrer = keeperRegistrar;
       return id;
     } else {
       revert('AUTO_APPROVE_DISABLED');
