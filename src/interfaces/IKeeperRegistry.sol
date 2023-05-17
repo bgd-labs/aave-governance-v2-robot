@@ -56,17 +56,11 @@ interface IKeeperRegistry {
 
   function cancelUpkeep(uint256 id) external;
 
-  function pauseUpkeep(uint256 id) external;
-
-  function unpauseUpkeep(uint256 id) external;
-
   function addFunds(uint256 id, uint96 amount) external;
 
   function withdrawFunds(uint256 id, address to) external;
 
   function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external;
-
-  function getKeeperInfo(address query) external view returns (address payee, bool active, uint96 balance);
 
   function getUpkeep(
     uint256 id

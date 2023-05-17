@@ -27,10 +27,15 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   /**
-   * @dev Only maintenance admin can call functions marked by this modifier.
+   * @dev Only maintenance admin or funds admin can call functions marked by this modifier.
    */
-  modifier onlyMaintenanceAdmin() {
-    require(msg.sender == _maintenanceAdmin, 'CALLER_NOT_MAINTENANCE_ADMIN');
+  modifier onlyMaintenanceOrFundsAdmin() {
+    require(
+      msg.sender == _maintenanceAdmin ||
+      msg.sender == _fundsAdmin
+      ,
+       'CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN'
+    );
     _;
   }
 
@@ -97,15 +102,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     IKeeperRegistry(keepers[id].registry).cancelUpkeep(id);
   }
 
-  function pause(uint256 id) external onlyFundsAdmin() {
-    IKeeperRegistry(keepers[id].registry).pauseUpkeep(id);
-  }
-
-  function unpause(uint256 id) external onlyFundsAdmin() {
-    IKeeperRegistry(keepers[id].registry).unpauseUpkeep(id);
-  }
-
-  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceAdmin() {
+  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin() {
     IKeeperRegistry(keepers[id].registry).setUpkeepGasLimit(id, gasLimit);
   }
 

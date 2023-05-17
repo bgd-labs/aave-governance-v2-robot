@@ -84,12 +84,28 @@ contract AaveCLRobotOperatorTest is Test {
     vm.stopPrank();
 
     vm.startPrank(address(6));
-    vm.expectRevert('CALLER_NOT_MAINTENANCE_ADMIN');
+    vm.expectRevert('CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN');
     aaveCLRobotOperator.setGasLimit(id, gasLimit);
     vm.stopPrank();
 
     (,uint32 executeGas,,,,,,) = IKeeperRegistry(REGISTRY).getUpkeep(id);
     assertEq(executeGas, gasLimit);
+  }
+
+  function testSetWithdrawAddress(address newWithdrawAddress) public {
+    vm.startPrank(FUNDS_ADMIN);
+    aaveCLRobotOperator.setWithdrawAddress(newWithdrawAddress);
+    vm.stopPrank();
+
+    vm.startPrank(address(10));
+    vm.expectRevert('CALLER_NOT_FUNDS_ADMIN');
+    aaveCLRobotOperator.setWithdrawAddress(newWithdrawAddress);
+    vm.stopPrank();
+
+    assertEq(
+      aaveCLRobotOperator.getWithdrawAddress(),
+      newWithdrawAddress
+    );
   }
 
   function _registerKeeper() internal returns (uint256, address) {
