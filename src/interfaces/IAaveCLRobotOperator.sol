@@ -6,10 +6,14 @@ pragma solidity ^0.8.0;
  * @dev
  */
 interface IAaveCLRobotOperator {
-  struct KeeperDetails {
+  struct KeeperInfo {
+    uint256 id;
     string name;
-    address upkeep;
     address registry;
     address registrer;
   }
+
+  function disableAutomationById(address upkeep, uint256 proposalId) external;
+
+  function isProposalDisabled(address upkeep, uint256 proposalId) external view returns (bool);
 }

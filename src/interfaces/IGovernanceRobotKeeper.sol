@@ -29,16 +29,4 @@ interface IGovernanceRobotKeeper is AutomationCompatibleInterface {
     uint256 id;
     ProposalAction action;
   }
-
-  /**
-   * @notice method to check if a proposalId or actionsSetId is disabled.
-   * @param id - proposalId or actionsSetId to check if disabled.
-   **/
-  function isDisabled(uint256 id) external view returns (bool);
-
-  /**
-   * @notice method to disable automation for a proposalId or actionsSetId.
-   * @param id - proposalId or actionsSetId to disable automation.
-   **/
-  function disableAutomation(uint256 id) external;
 }

@@ -11,12 +11,16 @@ import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
  * @dev
  */
 contract AaveCLRobotOperator is IAaveCLRobotOperator {
-  mapping(uint256 id => KeeperDetails) public keepers;
+  mapping(address upkeep => KeeperInfo) public keepers;
   address public immutable LINK_TOKEN;
 
   address public _fundsAdmin;
   address public _maintenanceAdmin;
   address public _linkWithdrawAddress;
+
+  mapping(address upkeep =>
+    mapping(uint256 proposalId => bool isDisabled)
+  ) internal _disabledProposals;
 
   /**
    * @dev Only funds admin can call functions marked by this modifier.
@@ -88,33 +92,50 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
           abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce))
         )
       );
-      keepers[id].name = name;
-      keepers[id].upkeep = upkeepContract;
-      keepers[id].registry = keeperRegistry;
-      keepers[id].registrer = keeperRegistrar;
+      keepers[upkeepContract].id = id;
+      keepers[upkeepContract].name = name;
+      keepers[upkeepContract].registry = keeperRegistry;
+      keepers[upkeepContract].registrer = keeperRegistrar;
       return id;
     } else {
       revert('AUTO_APPROVE_DISABLED');
     }
   }
 
-  function cancel(uint256 id) external onlyFundsAdmin() {
-    IKeeperRegistry(keepers[id].registry).cancelUpkeep(id);
+  function cancel(address upkeep) external onlyFundsAdmin {
+    IKeeperRegistry(keepers[upkeep].registry).cancelUpkeep(keepers[upkeep].id);
   }
 
-  function withdrawLink(uint256 id) external {
-    IKeeperRegistry(keepers[id].registry).withdrawFunds(
-      id,
+  function withdrawLink(address upkeep) external {
+    IKeeperRegistry(keepers[upkeep].registry).withdrawFunds(
+      keepers[upkeep].id,
       _linkWithdrawAddress
     );
   }
 
-  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin() {
-    IKeeperRegistry(keepers[id].registry).setUpkeepGasLimit(id, gasLimit);
+  function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
+    IKeeperRegistry(keepers[upkeep].registry).setUpkeepGasLimit(
+      keepers[upkeep].id,
+      gasLimit
+    );
   }
 
   function setWithdrawAddress(address newWithdrawAddress) external onlyFundsAdmin {
     _linkWithdrawAddress = newWithdrawAddress;
+  }
+
+  function disableAutomationById(
+    address upkeep,
+    uint256 proposalId
+  ) external onlyMaintenanceOrFundsAdmin {
+    _disabledProposals[upkeep][proposalId] = true;
+  }
+
+  function isProposalDisabled(
+    address upkeep,
+    uint256 proposalId
+  ) public view returns (bool) {
+    return _disabledProposals[upkeep][proposalId];
   }
 
   function getFundsAdmin() external view returns (address) {
