@@ -3,8 +3,8 @@ pragma solidity ^0.8.18;
 
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
-import {KeeperRegistrarInterface as IKeeperRegistrar} from '../interfaces/KeeperRegistrarInterface.sol';
-import {AutomationRegistryInterface as IKeeperRegistry} from 'chainlink-brownie-contracts/interfaces/AutomationRegistryInterface2_0.sol';
+import {IKeeperRegistrar} from '../interfaces/IKeeperRegistrar.sol';
+import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
 
 /**
  * @author BGD Labs
@@ -13,10 +13,10 @@ import {AutomationRegistryInterface as IKeeperRegistry} from 'chainlink-brownie-
 contract AaveCLRobotOperator is IAaveCLRobotOperator {
   mapping(uint256 id => KeeperDetails) public keepers;
   address public immutable LINK_TOKEN;
-  address public immutable LINK_WITHDRAW_ADDRESS;
 
   address public _fundsAdmin;
   address public _maintenanceAdmin;
+  address public _linkWithdrawAddress;
 
   /**
    * @dev Only funds admin can call functions marked by this modifier.
@@ -34,19 +34,6 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _;
   }
 
-  /**
-   * @dev
-   */
-  modifier isRegisteredKeeper(uint256 id) {
-    require(
-      keepers[id].upkeep != address(0) &&
-      keepers[id].registrer != address(0) &&
-      keepers[id].registry != address(0),
-      'INVALID_KEEPER'
-    );
-    _;
-  }
-
   constructor(
     address linkTokenAddress,
     address linkWithdrawAddress,
@@ -55,55 +42,82 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   ) {
     _fundsAdmin = fundsAdmin;
     _maintenanceAdmin = maintenanceAdmin;
+    _linkWithdrawAddress = linkWithdrawAddress;
     LINK_TOKEN = linkTokenAddress;
-    LINK_WITHDRAW_ADDRESS = linkWithdrawAddress;
   }
 
   function register(
     string memory name,
     address upkeepContract,
-    uint96 amountToFund,
     uint32 gasLimit,
     bytes memory checkData,
+    uint96 amountToFund,
     address keeperRegistry,
     address keeperRegistrer
-  ) external onlyFundsAdmin {
-    LinkTokenInterface(LINK_TOKEN).approve(
+  ) external onlyFundsAdmin returns (uint256) {
+    (IKeeperRegistry.State memory state,,) = IKeeperRegistry(keeperRegistry).getState();
+    uint256 oldNonce = state.nonce;
+
+    bytes memory payload = abi.encode(
+      name,
+      0x0,
+      upkeepContract,
+      gasLimit,
+      address(this),
+      checkData,
+      amountToFund,
+      0,
+      address(this)
+    );
+    bytes4 registerSig = IKeeperRegistrar.register.selector;
+    LinkTokenInterface(LINK_TOKEN).transferAndCall(
       keeperRegistrer,
-      amountToFund
+      amountToFund,
+      bytes.concat(registerSig, payload)
     );
-    uint256 id = IKeeperRegistrar(keeperRegistrer).registerUpkeep(
-      IKeeperRegistrar.RegistrationParams({
-        name: name,
-        encryptedEmail: '',
-        upkeepContract: upkeepContract,
-        gasLimit: gasLimit,
-        adminAddress: address(this),
-        checkData: checkData,
-        offchainConfig: '',
-        amount: amountToFund
-      })
-    );
-    keepers[id].name = name;
-    keepers[id].upkeep = upkeepContract;
-    keepers[id].registry = keeperRegistry;
-    keepers[id].registrer = keeperRegistrer;
+
+    (state,,) = IKeeperRegistry(keeperRegistry).getState();
+    if (state.nonce == oldNonce + 1) {
+      uint256 id = uint256(
+        keccak256(
+          abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce))
+        )
+      );
+      keepers[id].name = name;
+      keepers[id].upkeep = upkeepContract;
+      keepers[id].registry = keeperRegistry;
+      keepers[id].registrer = keeperRegistrer;
+      return id;
+    } else {
+      revert('AUTO_APPROVE_DISABLED');
+    }
   }
 
-  function cancel(uint256 id) external isRegisteredKeeper(id) {
+  function cancel(uint256 id) external onlyFundsAdmin() {
     IKeeperRegistry(keepers[id].registry).cancelUpkeep(id);
   }
 
-  function pause(uint256 id) external isRegisteredKeeper(id) {
+  function pause(uint256 id) external onlyFundsAdmin() {
     IKeeperRegistry(keepers[id].registry).pauseUpkeep(id);
   }
 
-  function unpause(uint256 id) external isRegisteredKeeper(id) {
+  function unpause(uint256 id) external onlyFundsAdmin() {
     IKeeperRegistry(keepers[id].registry).unpauseUpkeep(id);
   }
 
-  function withdrawLink(uint id) external {
-    // TODO
+  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceAdmin() {
+    IKeeperRegistry(keepers[id].registry).setUpkeepGasLimit(id, gasLimit);
+  }
+
+  function withdrawLink(uint256 id) external {
+    IKeeperRegistry(keepers[id].registry).withdrawFunds(
+      id,
+      _linkWithdrawAddress
+    );
+  }
+
+  function setWithdrawAddress(address newWithdrawAddress) external onlyFundsAdmin {
+    _linkWithdrawAddress = newWithdrawAddress;
   }
 
   function getFundsAdmin() external view returns (address) {
@@ -112,5 +126,9 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   function getMaintenanceAdmin() external view returns (address) {
     return _maintenanceAdmin;
+  }
+
+  function getWithdrawAddress() external view returns (address) {
+    return _linkWithdrawAddress;
   }
 }

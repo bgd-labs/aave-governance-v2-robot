@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 import {AutomationRegistryInterface, Config, State} from 'chainlink-brownie-contracts/interfaces/AutomationRegistryInterface1_2.sol';
-import {KeeperRegistrarInterface} from './KeeperRegistrarInterface.sol';
+import {IKeeperRegistrar} from '../interfaces/IKeeperRegistrar.sol';
 import {ICollectorController} from '../dependencies/ICollectorController.sol';
 import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
@@ -98,7 +98,7 @@ contract ProposalPayloadEthRobot {
       address(this)
     );
 
-    bytes4 registerSig = KeeperRegistrarInterface.register.selector;
+    bytes4 registerSig = IKeeperRegistrar.register.selector;
 
     LINK_TOKEN.transferAndCall(
       KEEPER_REGISTRAR_ADDRESS,
