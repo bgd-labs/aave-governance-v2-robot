@@ -3,9 +3,8 @@ pragma solidity ^0.8.0;
 
 import {Test} from 'forge-std/Test.sol';
 import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
-import {IAaveGovernanceV2, AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
+import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {LinkTokenInterface as ILink} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
-import {GovernanceHelpers} from './helpers/GovernanceHelpers.sol';
 import {EthRobotKeeper} from '../src/contracts/EthRobotKeeper.sol';
 import {IKeeperRegistry} from '../src/interfaces/IKeeperRegistry.sol';
 import 'forge-std/console.sol';
@@ -52,15 +51,15 @@ contract AaveCLRobotOperatorTest is Test {
 
   function testCancelAndWithdraw() public {
     assertEq(LINK_TOKEN.balanceOf(WITHDRAW_ADDRESS), 0);
-    (uint256 id,) = _registerKeeper();
+    (uint256 id, address upkeep) = _registerKeeper();
 
     vm.startPrank(FUNDS_ADMIN);
-    aaveCLRobotOperator.cancel(id);
+    aaveCLRobotOperator.cancel(upkeep);
     vm.stopPrank();
 
     vm.roll(block.number + 100);
 
-    aaveCLRobotOperator.withdrawLink(id);
+    aaveCLRobotOperator.withdrawLink(upkeep);
     (,,,uint96 balance,,,,) = IKeeperRegistry(REGISTRY).getUpkeep(id);
 
     assertEq(balance, 0);
@@ -68,24 +67,24 @@ contract AaveCLRobotOperatorTest is Test {
   }
 
   function testCancel() public {
-    (uint256 id,) = _registerKeeper();
+    (, address upkeep) = _registerKeeper();
 
     vm.startPrank(FUNDS_ADMIN);
-    aaveCLRobotOperator.cancel(id);
+    aaveCLRobotOperator.cancel(upkeep);
     vm.stopPrank();
   }
 
   function testChangeGasLimit(uint32 gasLimit) public {
     vm.assume(gasLimit >= 10_000 && gasLimit <= 5_000_000);
-    (uint256 id,) = _registerKeeper();
+    (uint256 id, address upkeep) = _registerKeeper();
 
     vm.startPrank(MAINTENANCE_ADMIN);
-    aaveCLRobotOperator.setGasLimit(id, gasLimit);
+    aaveCLRobotOperator.setGasLimit(upkeep, gasLimit);
     vm.stopPrank();
 
     vm.startPrank(address(6));
     vm.expectRevert('CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN');
-    aaveCLRobotOperator.setGasLimit(id, gasLimit);
+    aaveCLRobotOperator.setGasLimit(upkeep, gasLimit);
     vm.stopPrank();
 
     (,uint32 executeGas,,,,,,) = IKeeperRegistry(REGISTRY).getUpkeep(id);
@@ -129,13 +128,29 @@ contract AaveCLRobotOperatorTest is Test {
     );
   }
 
+  function testDisableAutomationById(address upkeep, uint256 proposalId) public {
+    assertEq(
+      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
+      false
+    );
+
+    vm.startPrank(MAINTENANCE_ADMIN);
+    aaveCLRobotOperator.disableAutomationById(upkeep, proposalId);
+    vm.stopPrank();
+
+    assertEq(
+      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
+      true
+    );
+  }
+
   function _registerKeeper() internal returns (uint256, address) {
     vm.startPrank(LINK_WHALE);
     LINK_TOKEN.transfer(address(aaveCLRobotOperator), 100 ether);
     vm.stopPrank();
 
     vm.startPrank(FUNDS_ADMIN);
-    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(AaveGovernanceV2.GOV);
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(aaveCLRobotOperator));
     uint256 id = aaveCLRobotOperator.register(
       'testName',
       address(ethRobotKeeper),
