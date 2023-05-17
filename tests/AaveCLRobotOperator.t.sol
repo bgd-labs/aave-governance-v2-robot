@@ -108,6 +108,27 @@ contract AaveCLRobotOperatorTest is Test {
     );
   }
 
+  function testGetFundsAdmin() public {
+    assertEq(
+      aaveCLRobotOperator.getFundsAdmin(),
+      FUNDS_ADMIN
+    );
+  }
+
+  function testMaintenanceAdmin() public {
+    assertEq(
+      aaveCLRobotOperator.getMaintenanceAdmin(),
+      MAINTENANCE_ADMIN
+    );
+  }
+
+  function testGetWithdrawAddress() public {
+    assertEq(
+      aaveCLRobotOperator.getWithdrawAddress(),
+      WITHDRAW_ADDRESS
+    );
+  }
+
   function _registerKeeper() internal returns (uint256, address) {
     vm.startPrank(LINK_WHALE);
     LINK_TOKEN.transfer(address(aaveCLRobotOperator), 100 ether);

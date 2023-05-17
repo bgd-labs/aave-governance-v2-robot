@@ -102,15 +102,15 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     IKeeperRegistry(keepers[id].registry).cancelUpkeep(id);
   }
 
-  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin() {
-    IKeeperRegistry(keepers[id].registry).setUpkeepGasLimit(id, gasLimit);
-  }
-
   function withdrawLink(uint256 id) external {
     IKeeperRegistry(keepers[id].registry).withdrawFunds(
       id,
       _linkWithdrawAddress
     );
+  }
+
+  function setGasLimit(uint256 id, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin() {
+    IKeeperRegistry(keepers[id].registry).setUpkeepGasLimit(id, gasLimit);
   }
 
   function setWithdrawAddress(address newWithdrawAddress) external onlyFundsAdmin {
