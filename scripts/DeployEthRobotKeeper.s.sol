@@ -14,8 +14,7 @@ contract Deploy is Script {
 
   function run() external {
     vm.startBroadcast();
-    keeper = new EthRobotKeeper(AaveGovernanceV2.GOV);
-    keeper.transferOwnership(GUARDIAN);
+    keeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(0));
 
     // create proposal here and pass the keeper address and the link amount to fund
     proposal = new ProposalPayloadEthRobot(address(keeper), 50 ether);

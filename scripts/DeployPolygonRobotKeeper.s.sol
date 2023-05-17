@@ -16,9 +16,7 @@ contract Deploy is Script {
   function run() external {
     vm.startBroadcast();
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR);
-    new L2RobotKeeper(bridgeExecutor);
-    keeper = new L2RobotKeeper(bridgeExecutor);
-    keeper.transferOwnership(GUARDIAN);
+    keeper = new L2RobotKeeper(address(bridgeExecutor), address(0));
 
     // create proposal here and pass the keeper address and the link amount to fund
     proposal = new ProposalPayloadPolygonRobot(address(keeper), 50 ether);
