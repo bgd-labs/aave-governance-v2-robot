@@ -66,6 +66,8 @@ interface IKeeperRegistry {
 
   function setUpkeepGasLimit(uint256 id, uint32 gasLimit) external;
 
+  function getKeeperInfo(address query) external view returns (address payee, bool active, uint96 balance);
+
   function getUpkeep(
     uint256 id
   ) external view
