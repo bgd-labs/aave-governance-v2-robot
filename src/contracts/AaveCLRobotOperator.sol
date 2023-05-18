@@ -7,13 +7,16 @@ import {IKeeperRegistrar} from '../interfaces/IKeeperRegistrar.sol';
 import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
 
 /**
+ * @title AaveCLRobotOperator
  * @author BGD Labs
- * @dev Operator contract to perform admin actions on the robot keepers.
+ * @dev Operator contract to perform admin actions on the automation keepers.
  *      The contract can register keepers, cancel it, withdraw excess link,
  *      configure the registered keepers and disable automation on a certain proposal.
  */
 contract AaveCLRobotOperator is IAaveCLRobotOperator {
+  /// @inheritdoc IAaveCLRobotOperator
   address public immutable LINK_TOKEN;
+
   address internal _fundsAdmin;
   address internal _maintenanceAdmin;
   address internal _linkWithdrawAddress;
@@ -45,6 +48,12 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _;
   }
 
+  /**
+   * @param linkTokenAddress address of the ERC-677 link token contract.
+   * @param linkWithdrawAddress withdrawal address to send the exccess link after cancelling the keeper.
+   * @param fundsAdmin address of funds admin.
+   * @param maintenanceAdmin address of the maintenance admin.
+   */
   constructor(
     address linkTokenAddress,
     address linkWithdrawAddress,
@@ -57,6 +66,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _maintenanceAdmin = maintenanceAdmin;
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function register(
     string memory name,
     address upkeepContract,
@@ -103,10 +113,12 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     }
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function cancel(address upkeep) external onlyFundsAdmin {
     IKeeperRegistry(_keepers[upkeep].registry).cancelUpkeep(_keepers[upkeep].id);
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function withdrawLink(address upkeep) external {
     IKeeperRegistry(_keepers[upkeep].registry).withdrawFunds(
       _keepers[upkeep].id,
@@ -114,6 +126,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     );
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
     IKeeperRegistry(_keepers[upkeep].registry).setUpkeepGasLimit(
       _keepers[upkeep].id,
@@ -121,10 +134,12 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     );
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function setWithdrawAddress(address newWithdrawAddress) external onlyFundsAdmin {
     _linkWithdrawAddress = newWithdrawAddress;
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function toggleDisableAutomationById(
     address upkeep,
     uint256 proposalId
@@ -132,6 +147,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _disabledProposals[upkeep][proposalId] = !_disabledProposals[upkeep][proposalId];
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function isProposalDisabled(
     address upkeep,
     uint256 proposalId
@@ -139,18 +155,22 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     return _disabledProposals[upkeep][proposalId];
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function getFundsAdmin() external view returns (address) {
     return _fundsAdmin;
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function getMaintenanceAdmin() external view returns (address) {
     return _maintenanceAdmin;
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function getWithdrawAddress() external view returns (address) {
     return _linkWithdrawAddress;
   }
 
+  /// @inheritdoc IAaveCLRobotOperator
   function getKeeperInfo(address upkeep) external view returns (KeeperInfo memory) {
     return _keepers[upkeep];
   }

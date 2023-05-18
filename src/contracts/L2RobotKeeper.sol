@@ -7,6 +7,7 @@ import {IL2RobotKeeper, AutomationCompatibleInterface} from '../interfaces/IL2Ro
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 
 /**
+ * @title L2RobotKeeper
  * @author BGD Labs
  * @dev Aave chainlink keeper-compatible contract for proposal actionsSet automation on layer 2:
  * - checks if the proposal actionsSet state could be moved to executed

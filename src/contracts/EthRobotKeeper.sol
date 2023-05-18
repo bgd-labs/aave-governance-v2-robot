@@ -7,6 +7,7 @@ import {IEthRobotKeeper, AutomationCompatibleInterface} from '../interfaces/IEth
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 
 /**
+ * @title EthRobotKeeper
  * @author BGD Labs
  * @dev Aave chainlink keeper-compatible contract for proposal automation:
  * - checks if the proposal state could be moved to queued, executed or cancelled
