@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {Deploy} from '../scripts/DeployEthRobotKeeper.s.sol';
-import {ProposalPayloadEthRobot} from '../src/proposal/ProposalPayloadEthRobot.sol';
+import {Deploy} from '../scripts/DeployOptimismPayload.s.sol';
+import {ProposalPayloadOptimismRobot} from '../src/proposal/ProposalPayloadOptimismRobot.sol';
 import {TestWithExecutor} from 'aave-helpers/GovHelpers.sol';
 import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 
-contract ProposalPayloadEthRobotTest is TestWithExecutor {
-  ProposalPayloadEthRobot public payload;
+contract ProposalPayloadOptimismRobotTest is TestWithExecutor {
+  ProposalPayloadOptimismRobot public payload;
 
   event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeedId);
 
   function setUp() public {
     vm.createSelectFork(
-      'mainnet',
-      16613098 // Feb-12-2023
+      'optimism',
+      99549575
     );
-    _selectPayloadExecutor(AaveGovernanceV2.SHORT_EXECUTOR);
+    _selectPayloadExecutor(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
   }
 
-  function testExecuteProposalEth() public {
+  function testExecuteProposalOptimism() public {
     // deploy all contracts
     Deploy script = new Deploy();
     script.run();
 
-    payload = script.proposal();
+    payload = script.payload();
     vm.expectEmit(true, false, false, false);
-    emit ChainlinkUpkeepRegistered('AaveEthRobotKeeperV2', 0);
+    emit ChainlinkUpkeepRegistered('AaveOptRobotKeeperV2', 0);
 
     // Execute proposal
     _executor.execute(address(payload));
