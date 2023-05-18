@@ -114,7 +114,7 @@ contract EthRobotKeeperTest is Test {
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(aaveCLRobotOperator));
 
     vm.startPrank(address(5));
-    aaveCLRobotOperator.disableAutomationById(address(ethRobotKeeper), 6);
+    aaveCLRobotOperator.toggleDisableAutomationById(address(ethRobotKeeper), 6);
     vm.stopPrank();
 
     IAaveGovernanceV2.ProposalState proposal6State = AaveGovernanceV2.GOV.getProposalState(6);

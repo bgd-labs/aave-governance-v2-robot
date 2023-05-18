@@ -129,19 +129,26 @@ contract AaveCLRobotOperatorTest is Test {
   }
 
   function testDisableAutomationById(address upkeep, uint256 proposalId) public {
+    vm.startPrank(MAINTENANCE_ADMIN);
     assertEq(
       aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
       false
     );
 
-    vm.startPrank(MAINTENANCE_ADMIN);
-    aaveCLRobotOperator.disableAutomationById(upkeep, proposalId);
-    vm.stopPrank();
+    aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
 
     assertEq(
       aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
       true
     );
+
+    aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
+
+    assertEq(
+      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
+      false
+    );
+    vm.stopPrank();
   }
 
   function testGetKeeperInfo() public {

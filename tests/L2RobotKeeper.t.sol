@@ -82,7 +82,7 @@ contract L2RobotKeeperTest is Test {
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor), address(aaveCLRobotOperator));
 
     vm.startPrank(address(5));
-    aaveCLRobotOperator.disableAutomationById(address(l2RobotKeeper), 9);
+    aaveCLRobotOperator.toggleDisableAutomationById(address(l2RobotKeeper), 9);
     vm.stopPrank();
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(9);

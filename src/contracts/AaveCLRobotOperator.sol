@@ -8,10 +8,12 @@ import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
 
 /**
  * @author BGD Labs
- * @dev
+ * @dev Operator contract to perform admin actions on the robot keepers.
+ *      The contract can register keepers, cancel it, withdraw excess link,
+ *      configure the registered keepers and disable automation on a certain proposal.
  */
 contract AaveCLRobotOperator is IAaveCLRobotOperator {
-  address internal immutable LINK_TOKEN;
+  address public immutable LINK_TOKEN;
   address internal _fundsAdmin;
   address internal _maintenanceAdmin;
   address internal _linkWithdrawAddress;
@@ -123,17 +125,17 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _linkWithdrawAddress = newWithdrawAddress;
   }
 
-  function disableAutomationById(
+  function toggleDisableAutomationById(
     address upkeep,
     uint256 proposalId
   ) external onlyMaintenanceOrFundsAdmin {
-    _disabledProposals[upkeep][proposalId] = true;
+    _disabledProposals[upkeep][proposalId] = !_disabledProposals[upkeep][proposalId];
   }
 
   function isProposalDisabled(
     address upkeep,
     uint256 proposalId
-  ) public view returns (bool) {
+  ) external view returns (bool) {
     return _disabledProposals[upkeep][proposalId];
   }
 

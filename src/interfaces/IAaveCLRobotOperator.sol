@@ -12,7 +12,7 @@ interface IAaveCLRobotOperator {
     address registry;
   }
 
-  function disableAutomationById(address upkeep, uint256 proposalId) external;
+  function toggleDisableAutomationById(address upkeep, uint256 proposalId) external;
 
   function isProposalDisabled(address upkeep, uint256 proposalId) external view returns (bool);
 }
