@@ -32,10 +32,7 @@ contract EthRobotKeeper is IEthRobotKeeper {
    * @param governanceV2 address of the governance contract.
    * @param robotOperator address of the robot operator contract.
    */
-  constructor(
-    address governanceV2,
-    address robotOperator
-  ) {
+  constructor(address governanceV2, address robotOperator) {
     GOVERNANCE_V2 = governanceV2;
     ROBOT_OPERATOR = robotOperator;
   }
@@ -57,10 +54,10 @@ contract EthRobotKeeper is IEthRobotKeeper {
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
       uint256 proposalId = index - 1;
 
-      IAaveGovernanceV2.ProposalState proposalState = IAaveGovernanceV2(GOVERNANCE_V2).getProposalState(proposalId);
-      IAaveGovernanceV2.ProposalWithoutVotes memory proposal = IAaveGovernanceV2(GOVERNANCE_V2).getProposalById(
-        proposalId
-      );
+      IAaveGovernanceV2.ProposalState proposalState = IAaveGovernanceV2(GOVERNANCE_V2)
+        .getProposalState(proposalId);
+      IAaveGovernanceV2.ProposalWithoutVotes memory proposal = IAaveGovernanceV2(GOVERNANCE_V2)
+        .getProposalById(proposalId);
 
       if (!IAaveCLRobotOperator(ROBOT_OPERATOR).isProposalDisabled(address(this), proposalId)) {
         if (_isProposalInFinalState(proposalState)) {
@@ -113,16 +110,13 @@ contract EthRobotKeeper is IEthRobotKeeper {
       uint256 proposalId = actionsWithIds[i - 1].id;
       ProposalAction action = actionsWithIds[i - 1].action;
 
-      IAaveGovernanceV2.ProposalWithoutVotes memory proposal = IAaveGovernanceV2(GOVERNANCE_V2).getProposalById(
-        proposalId
-      );
-      IAaveGovernanceV2.ProposalState proposalState = IAaveGovernanceV2(GOVERNANCE_V2).getProposalState(
-        proposalId
-      );
+      IAaveGovernanceV2.ProposalWithoutVotes memory proposal = IAaveGovernanceV2(GOVERNANCE_V2)
+        .getProposalById(proposalId);
+      IAaveGovernanceV2.ProposalState proposalState = IAaveGovernanceV2(GOVERNANCE_V2)
+        .getProposalState(proposalId);
 
       if (
-        action == ProposalAction.PerformCancel &&
-        _canProposalBeCancelled(proposalState, proposal)
+        action == ProposalAction.PerformCancel && _canProposalBeCancelled(proposalState, proposal)
       ) {
         try IAaveGovernanceV2(GOVERNANCE_V2).cancel(proposalId) {
           isActionPerformed = true;
@@ -130,10 +124,7 @@ contract EthRobotKeeper is IEthRobotKeeper {
         } catch Error(string memory reason) {
           emit ActionFailed(proposalId, action, reason);
         }
-      } else if (
-        action == ProposalAction.PerformQueue &&
-        _canProposalBeQueued(proposalState)
-      ) {
+      } else if (action == ProposalAction.PerformQueue && _canProposalBeQueued(proposalState)) {
         try IAaveGovernanceV2(GOVERNANCE_V2).queue(proposalId) {
           isActionPerformed = true;
           emit ActionSucceeded(proposalId, action);
@@ -141,8 +132,7 @@ contract EthRobotKeeper is IEthRobotKeeper {
           emit ActionFailed(proposalId, action, reason);
         }
       } else if (
-        action == ProposalAction.PerformExecute &&
-        _canProposalBeExecuted(proposalState, proposal)
+        action == ProposalAction.PerformExecute && _canProposalBeExecuted(proposalState, proposal)
       ) {
         try IAaveGovernanceV2(GOVERNANCE_V2).execute(proposalId) {
           isActionPerformed = true;

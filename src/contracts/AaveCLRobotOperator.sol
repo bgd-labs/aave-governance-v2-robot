@@ -23,9 +23,8 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   mapping(address upkeep => KeeperInfo) internal _keepers;
 
-  mapping(address upkeep =>
-    mapping(uint256 proposalId => bool isDisabled)
-  ) internal _disabledProposals;
+  mapping(address upkeep => mapping(uint256 proposalId => bool isDisabled))
+    internal _disabledProposals;
 
   /**
    * @dev Only funds admin can call functions marked by this modifier.
@@ -40,10 +39,8 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
    */
   modifier onlyMaintenanceOrFundsAdmin() {
     require(
-      msg.sender == _maintenanceAdmin ||
-      msg.sender == _fundsAdmin
-      ,
-       'CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN'
+      msg.sender == _maintenanceAdmin || msg.sender == _fundsAdmin,
+      'CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN'
     );
     _;
   }
@@ -76,7 +73,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     address keeperRegistry,
     address keeperRegistrar
   ) external onlyFundsAdmin returns (uint256) {
-    (IKeeperRegistry.State memory state,,) = IKeeperRegistry(keeperRegistry).getState();
+    (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(keeperRegistry).getState();
     uint256 oldNonce = state.nonce;
 
     bytes memory payload = abi.encode(
@@ -97,12 +94,10 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
       bytes.concat(registerSig, payload)
     );
 
-    (state,,) = IKeeperRegistry(keeperRegistry).getState();
+    (state, , ) = IKeeperRegistry(keeperRegistry).getState();
     if (state.nonce == oldNonce + 1) {
       uint256 id = uint256(
-        keccak256(
-          abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce))
-        )
+        keccak256(abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce)))
       );
       _keepers[upkeepContract].id = id;
       _keepers[upkeepContract].name = name;
@@ -128,10 +123,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   /// @inheritdoc IAaveCLRobotOperator
   function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
-    IKeeperRegistry(_keepers[upkeep].registry).setUpkeepGasLimit(
-      _keepers[upkeep].id,
-      gasLimit
-    );
+    IKeeperRegistry(_keepers[upkeep].registry).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
@@ -148,10 +140,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function isProposalDisabled(
-    address upkeep,
-    uint256 proposalId
-  ) external view returns (bool) {
+  function isProposalDisabled(address upkeep, uint256 proposalId) external view returns (bool) {
     return _disabledProposals[upkeep][proposalId];
   }
 

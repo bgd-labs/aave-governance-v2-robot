@@ -32,10 +32,7 @@ contract L2RobotKeeper is IL2RobotKeeper {
    * @param bridgeExecutor address of the bridge executor contract.
    * @param robotOperator address of the robot operator contract.
    */
-  constructor(
-    address bridgeExecutor,
-    address robotOperator
-  ) {
+  constructor(address bridgeExecutor, address robotOperator) {
     BRIDGE_EXECUTOR = bridgeExecutor;
     ROBOT_OPERATOR = robotOperator;
   }
@@ -116,8 +113,12 @@ contract L2RobotKeeper is IL2RobotKeeper {
    * @return true if the actionsSet could be executed, false otherwise.
    */
   function _canActionSetBeExecuted(uint256 actionsSetId) internal view returns (bool) {
-    IExecutorBase.ActionsSet memory actionsSet = IExecutorBase(BRIDGE_EXECUTOR).getActionsSetById(actionsSetId);
-    IExecutorBase.ActionsSetState actionsSetState = IExecutorBase(BRIDGE_EXECUTOR).getCurrentState(actionsSetId);
+    IExecutorBase.ActionsSet memory actionsSet = IExecutorBase(BRIDGE_EXECUTOR).getActionsSetById(
+      actionsSetId
+    );
+    IExecutorBase.ActionsSetState actionsSetState = IExecutorBase(BRIDGE_EXECUTOR).getCurrentState(
+      actionsSetId
+    );
 
     if (
       actionsSetState == IExecutorBase.ActionsSetState.Queued &&

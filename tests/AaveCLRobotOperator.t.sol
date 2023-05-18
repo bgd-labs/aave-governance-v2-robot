@@ -38,8 +38,11 @@ contract AaveCLRobotOperatorTest is Test {
       address target,
       uint32 executeGas,
       bytes memory checkData,
-      uint96 balance,,
-      address admin,,
+      uint96 balance,
+      ,
+      address admin,
+      ,
+
     ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
 
     assertEq(target, upkeep);
@@ -60,7 +63,7 @@ contract AaveCLRobotOperatorTest is Test {
     vm.roll(block.number + 100);
 
     aaveCLRobotOperator.withdrawLink(upkeep);
-    (,,,uint96 balance,,,,) = IKeeperRegistry(REGISTRY).getUpkeep(id);
+    (, , , uint96 balance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
 
     assertEq(balance, 0);
     assertGt(LINK_TOKEN.balanceOf(WITHDRAW_ADDRESS), 0);
@@ -87,7 +90,7 @@ contract AaveCLRobotOperatorTest is Test {
     aaveCLRobotOperator.setGasLimit(upkeep, gasLimit);
     vm.stopPrank();
 
-    (,uint32 executeGas,,,,,,) = IKeeperRegistry(REGISTRY).getUpkeep(id);
+    (, uint32 executeGas, , , , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
     assertEq(executeGas, gasLimit);
   }
 
@@ -101,53 +104,32 @@ contract AaveCLRobotOperatorTest is Test {
     aaveCLRobotOperator.setWithdrawAddress(newWithdrawAddress);
     vm.stopPrank();
 
-    assertEq(
-      aaveCLRobotOperator.getWithdrawAddress(),
-      newWithdrawAddress
-    );
+    assertEq(aaveCLRobotOperator.getWithdrawAddress(), newWithdrawAddress);
   }
 
   function testGetFundsAdmin() public {
-    assertEq(
-      aaveCLRobotOperator.getFundsAdmin(),
-      FUNDS_ADMIN
-    );
+    assertEq(aaveCLRobotOperator.getFundsAdmin(), FUNDS_ADMIN);
   }
 
   function testMaintenanceAdmin() public {
-    assertEq(
-      aaveCLRobotOperator.getMaintenanceAdmin(),
-      MAINTENANCE_ADMIN
-    );
+    assertEq(aaveCLRobotOperator.getMaintenanceAdmin(), MAINTENANCE_ADMIN);
   }
 
   function testGetWithdrawAddress() public {
-    assertEq(
-      aaveCLRobotOperator.getWithdrawAddress(),
-      WITHDRAW_ADDRESS
-    );
+    assertEq(aaveCLRobotOperator.getWithdrawAddress(), WITHDRAW_ADDRESS);
   }
 
   function testDisableAutomationById(address upkeep, uint256 proposalId) public {
     vm.startPrank(MAINTENANCE_ADMIN);
-    assertEq(
-      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
-      false
-    );
+    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), false);
 
     aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
 
-    assertEq(
-      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
-      true
-    );
+    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), true);
 
     aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
 
-    assertEq(
-      aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId),
-      false
-    );
+    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), false);
     vm.stopPrank();
   }
 
@@ -165,7 +147,10 @@ contract AaveCLRobotOperatorTest is Test {
     vm.stopPrank();
 
     vm.startPrank(FUNDS_ADMIN);
-    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(aaveCLRobotOperator));
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
+      address(AaveGovernanceV2.GOV),
+      address(aaveCLRobotOperator)
+    );
     uint256 id = aaveCLRobotOperator.register(
       'testName',
       address(ethRobotKeeper),
