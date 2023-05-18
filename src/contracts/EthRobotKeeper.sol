@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IAaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IProposalValidator} from '../interfaces/IProposalValidator.sol';
-import {IGovernanceRobotKeeper, AutomationCompatibleInterface} from '../interfaces/IGovernanceRobotKeeper.sol';
+import {IEthRobotKeeper, AutomationCompatibleInterface} from '../interfaces/IEthRobotKeeper.sol';
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 
 /**
@@ -12,14 +12,25 @@ import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
  * - checks if the proposal state could be moved to queued, executed or cancelled
  * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
-contract EthRobotKeeper is IGovernanceRobotKeeper {
+contract EthRobotKeeper is IEthRobotKeeper {
+  /// @inheritdoc IEthRobotKeeper
   address public immutable GOVERNANCE_V2;
+
+  /// @inheritdoc IEthRobotKeeper
   address public immutable ROBOT_OPERATOR;
+
+  /// @inheritdoc IEthRobotKeeper
   uint256 public constant MAX_ACTIONS = 25;
+
+  /// @inheritdoc IEthRobotKeeper
   uint256 public constant MAX_SKIP = 20;
 
   error NoActionCanBePerformed();
 
+  /**
+   * @param governanceV2 address of the governance contract.
+   * @param robotOperator address of the robot operator contract.
+   */
   constructor(
     address governanceV2,
     address robotOperator
@@ -29,6 +40,7 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
   }
 
   /**
+   * @inheritdoc AutomationCompatibleInterface
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
    */
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
@@ -38,7 +50,9 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     uint256 skipCount = 0;
     uint256 actionsCount = 0;
 
-    // loops from the last proposalId until MAX_SKIP iterations, resets skipCount if an action could be performed
+    // loops from the last/latest proposalId until MAX_SKIP iterations. resets skipCount and checks more MAX_SKIP number
+    // of proposals if any action could be performed. we only check proposals until MAX_SKIP iterations from the last/latest
+    // proposalId or proposals where any action could be performed, and proposals before that will be not be checked by the keeper.
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
       uint256 proposalId = index - 1;
 
@@ -141,6 +155,11 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     if (!isActionPerformed) revert NoActionCanBePerformed();
   }
 
+  /**
+   * @notice method to check if the proposal state is in final state.
+   * @param proposalState the current state the proposal is in.
+   * @return true if the proposal state is final state, false otherwise.
+   */
   function _isProposalInFinalState(
     IAaveGovernanceV2.ProposalState proposalState
   ) internal pure returns (bool) {
@@ -155,12 +174,23 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     return false;
   }
 
+  /**
+   * @notice method to check if proposal could be queued.
+   * @param proposalState the current state the proposal is in.
+   * @return true if the proposal could be queued, false otherwise.
+   */
   function _canProposalBeQueued(
     IAaveGovernanceV2.ProposalState proposalState
   ) internal pure returns (bool) {
     return proposalState == IAaveGovernanceV2.ProposalState.Succeeded;
   }
 
+  /**
+   * @notice method to check if proposal could be executed.
+   * @param proposalState the current state the proposal is in.
+   * @param proposal the proposal to check if it can be executed.
+   * @return true if the proposal could be executed, false otherwise.
+   */
   function _canProposalBeExecuted(
     IAaveGovernanceV2.ProposalState proposalState,
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal
@@ -174,6 +204,12 @@ contract EthRobotKeeper is IGovernanceRobotKeeper {
     return false;
   }
 
+  /**
+   * @notice method to check if proposal could be cancelled.
+   * @param proposalState the current state the proposal is in.
+   * @param proposal the proposal to check if it can be cancelled.
+   * @return true if the proposal could be cancelled, false otherwise.
+   */
   function _canProposalBeCancelled(
     IAaveGovernanceV2.ProposalState proposalState,
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal

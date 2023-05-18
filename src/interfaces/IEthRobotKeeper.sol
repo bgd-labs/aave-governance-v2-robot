@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfaces/AutomationCompatibleInterface.sol';
+
+/**
+ * @title IEthRobotKeeper
+ * @author BGD Labs
+ * @notice Defines the interface for the contract to automate actions on aave governance v2 proposals Eth Mainnet.
+ **/
+interface IEthRobotKeeper is AutomationCompatibleInterface {
+  /**
+   * @dev Emitted when performUpkeep is called and no actions are executed.
+   * @param id proposal id of failed action.
+   * @param action action performed on the proposal which faled.
+   * @param reason reason of the failed action.
+   */
+  event ActionFailed(uint256 indexed id, ProposalAction indexed action, string reason);
+
+  /**
+   * @dev Emitted when performUpkeep is called and actions are executed.
+   * @param id proposal id of successful action.
+   * @param action successful action performed on the proposal.
+   */
+  event ActionSucceeded(uint256 indexed id, ProposalAction indexed action);
+
+  /**
+   * @notice Actions that can be performed by the robot on the governance v2.
+   * @param PerformQueue: performs queue action on the governance contract.
+   * @param PerformExecute: performs execute action on the governance contract.
+   * @param PerformCancel: performs cancel action on the governance contract.
+   **/
+  enum ProposalAction {
+    PerformQueue,
+    PerformExecute,
+    PerformCancel
+  }
+
+  /**
+   * @notice holds action to be performed for a given proposalId.
+   * @param id proposal id for which action needs to be performed.
+   * @param action action to be perfomed for the proposalId.
+   */
+  struct ActionWithId {
+    uint256 id;
+    ProposalAction action;
+  }
+
+  /**
+   * @notice method to get the address of the aave governance v2 contract.
+   * @return governance v2 contract address.
+   */
+  function GOVERNANCE_V2() external returns (address);
+
+  /**
+   * @notice method to get the maximum number of actions that can be performed by the keeper in one performUpkeep.
+   * @return max number of actions.
+   */
+  function MAX_ACTIONS() external returns (uint256);
+
+  /**
+   * @notice method to get maximum number of proposals to check before the latest proposal, if an action could be performed upon.
+   * @return max number of skips.
+   */
+  function MAX_SKIP() external returns (uint256);
+
+  /**
+   * @notice method to get the address of robot operator which performs the admin actions on the keeper.
+   * @return robot operator contract address.
+   */
+  function ROBOT_OPERATOR() external returns (address);
+}
