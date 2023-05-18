@@ -11,12 +11,12 @@ import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
  * @dev
  */
 contract AaveCLRobotOperator is IAaveCLRobotOperator {
-  mapping(address upkeep => KeeperInfo) public keepers;
-  address public immutable LINK_TOKEN;
+  address internal immutable LINK_TOKEN;
+  address internal _fundsAdmin;
+  address internal _maintenanceAdmin;
+  address internal _linkWithdrawAddress;
 
-  address public _fundsAdmin;
-  address public _maintenanceAdmin;
-  address public _linkWithdrawAddress;
+  mapping(address upkeep => KeeperInfo) internal _keepers;
 
   mapping(address upkeep =>
     mapping(uint256 proposalId => bool isDisabled)
@@ -92,10 +92,9 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
           abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce))
         )
       );
-      keepers[upkeepContract].id = id;
-      keepers[upkeepContract].name = name;
-      keepers[upkeepContract].registry = keeperRegistry;
-      keepers[upkeepContract].registrer = keeperRegistrar;
+      _keepers[upkeepContract].id = id;
+      _keepers[upkeepContract].name = name;
+      _keepers[upkeepContract].registry = keeperRegistry;
       return id;
     } else {
       revert('AUTO_APPROVE_DISABLED');
@@ -103,19 +102,19 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   function cancel(address upkeep) external onlyFundsAdmin {
-    IKeeperRegistry(keepers[upkeep].registry).cancelUpkeep(keepers[upkeep].id);
+    IKeeperRegistry(_keepers[upkeep].registry).cancelUpkeep(_keepers[upkeep].id);
   }
 
   function withdrawLink(address upkeep) external {
-    IKeeperRegistry(keepers[upkeep].registry).withdrawFunds(
-      keepers[upkeep].id,
+    IKeeperRegistry(_keepers[upkeep].registry).withdrawFunds(
+      _keepers[upkeep].id,
       _linkWithdrawAddress
     );
   }
 
   function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
-    IKeeperRegistry(keepers[upkeep].registry).setUpkeepGasLimit(
-      keepers[upkeep].id,
+    IKeeperRegistry(_keepers[upkeep].registry).setUpkeepGasLimit(
+      _keepers[upkeep].id,
       gasLimit
     );
   }
@@ -148,5 +147,9 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   function getWithdrawAddress() external view returns (address) {
     return _linkWithdrawAddress;
+  }
+
+  function getKeeperInfo(address upkeep) external view returns (KeeperInfo memory) {
+    return _keepers[upkeep];
   }
 }

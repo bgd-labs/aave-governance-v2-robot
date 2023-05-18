@@ -144,6 +144,14 @@ contract AaveCLRobotOperatorTest is Test {
     );
   }
 
+  function testGetKeeperInfo() public {
+    (uint256 id, address upkeep) = _registerKeeper();
+    AaveCLRobotOperator.KeeperInfo memory keeperInfo = aaveCLRobotOperator.getKeeperInfo(upkeep);
+    assertEq(keeperInfo.id, id);
+    assertEq(keeperInfo.registry, REGISTRY);
+    assertEq(keeperInfo.name, 'testName');
+  }
+
   function _registerKeeper() internal returns (uint256, address) {
     vm.startPrank(LINK_WHALE);
     LINK_TOKEN.transfer(address(aaveCLRobotOperator), 100 ether);

@@ -10,7 +10,6 @@ interface IAaveCLRobotOperator {
     uint256 id;
     string name;
     address registry;
-    address registrer;
   }
 
   function disableAutomationById(address upkeep, uint256 proposalId) external;
