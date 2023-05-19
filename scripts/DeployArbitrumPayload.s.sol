@@ -29,7 +29,7 @@ contract Deploy is Script {
     keeper = new L2RobotKeeper(AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR, address(aaveCLRobotOperator));
 
     // deploy the payload
-    payload = new ProposalPayloadArbitrumRobot(address(keeper), address(aaveCLRobotOperator), 75 ether);
+    payload = new ProposalPayloadArbitrumRobot(address(keeper), address(aaveCLRobotOperator), 50 ether);
 
     console.log('Arbitrum keeper address', address(keeper));
     console.log('Arbitrum operator address', address(aaveCLRobotOperator));

@@ -25,9 +25,6 @@ contract ProposalPayloadPolygonRobotTest is TestWithExecutor {
     Deploy script = new Deploy();
     script.run();
 
-    // expects collector to have 50 Link
-    deal(ERC677_LINK, address(AaveV3Polygon.COLLECTOR), 50 ether);
-
     payload = script.proposal();
     vm.expectEmit(true, false, false, false);
     emit ChainlinkUpkeepRegistered('AavePolRobotKeeperV2', 0);
