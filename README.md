@@ -44,13 +44,14 @@ Note: `ActionSetsId` for cross-chain-governance can only be `Canceled` by `GUARD
 
 ### Keeper Contracts
 
-The keeper contracts are deployed and registered for ethereum and also for all L2 for cross-chain-governance proposals with the `GUARDIAN` as the owner and have the following functions:
+The keeper contracts are deployed and registered for ethereum and also for all L2's and have the following functions:
 
 - `checkUpKeep()`
 
   This is called off-chain by Chainlink every block to check if any action could be performed and if so calls `performUpKeep()`.
-  It loops the last 25 proposals / actionsSetId and checks if any proposal / actionsSetId could be moved to `Queued`, `Executed` or `Canceled` State.
-  If any action could be perfomed it checks 25 more proposals and so on to be confident.
+  It loops the last `MAX_SKIP` number of proposals / actionsSetId and checks if any proposal / actionsSetId could be moved to `Queued`, `Executed` or `Canceled` State.
+  If any action could be perfomed it checks `MAX_SKIP` more proposals / actionsSetId and so on to be confident.
+  If any proposal / actionsSetId is disabled by the Aave CL Robot Operator, it skips it.
   In case any actions could be performed it stores them in an array of struct `ActionWithId[]` which contain the id of proposal/actionsSet and the action to perform and returns true with the `ActionWithId[]` encoded in params.
 
 - `performUpKeep()`
@@ -62,15 +63,38 @@ The keeper contracts are deployed and registered for ethereum and also for all L
 
   Note: A maximum of 25 actions are returned by `checkUpKeep()` to execute, if there are more actions they will be performed in the next block.
 
-- `disableAutomation()`
+### Aave CL Robot Operator
 
-  Called only by the owner which is initially set to the `GUARDIAN` to pause automation for a certain proposalId or actionsSetId.
+The contract to perform admin actions on the Aave Robot Keepers.
+
+<img width="852" alt="Screenshot 2023-05-22 at 12 12 42 PM" src="https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/91250424-c851-4d55-b5a4-75f4d1ae8395">
+
+- `register()` 
+
+  Called by the funds admin of the Robot Operator to register the Chainlink Keeper.
+
+- `cancel()`
+
+  Called by the funds admin of the Robot Operator to cancel the Chainlink Keeper.
+
+- `withdrawLink()` 
+
+  Called by the funds admin of the Robot Operator to withdraw link from the Chainlink Keeper. Note that we can only withdraw link after a keeper has been canceled and certain   blocks have passed after being canceled.
+
+- `setGasLimit()`
+
+  Called by the maintenance admin or the funds admin to set the max gas limit for execution by the Chainlink Keeper.
+
+- `toggleDisableAutomationById()`
+
+  Called only by the  maintenance admin or the funds admin to disable / enable automation for a certain proposalId or actionsSetId for a specific Chainlink Keeper.
 
 # Deployment
 
-1. [DeployEthRobotKeeper.s.sol](./scripts/DeployEthRobotKeeper.s.sol): Will deploy the Keeper contract for Ethereum and set the owner as `GUARDIAN`.
-2. [DeployArbitrumRobotKeeper.s.sol](./scripts/DeployArbitrumRobotKeeper.s.sol): Will deploy the Keeper contract for Arbitrum and set the owner as `GUARDIAN`.
-3. [DeployPolygonRobotKeeper.s.sol](./scripts/DeployPolygonRobotKeeper.s.sol): Will deploy the Keeper contract for Polygon and set the owner as `GUARDIAN`.
+1. [DeployEthereumPayload.s.sol](./scripts/DeployEthereumPayload.s.sol): Will deploy the Keeper contract, Operator Contract and the Proposal Payload for Ethereum.
+2. [DeployArbitrumPayload.s.sol](./scripts/DeployArbitrumPayload.s.sol): Will deploy the Keeper contract, Operator Contract and the Proposal Payload for Arbitrum.
+3. [DeployPolygonPayload.s.sol](./scripts/DeployPolygonPayload.s.sol): Will deploy the Keeper contract, Operator Contract and the Proposal Payload for Polygon.
+4. [DeployOptimismPayload.s.sol](./scripts/DeployOptimismPayload.s.sol): Will deploy the Keeper contract, Operator Contract and the Proposal Payload for Optimism.
 
 # Setup
 
