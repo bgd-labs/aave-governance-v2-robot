@@ -87,11 +87,10 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
       0,
       address(this)
     );
-    bytes4 registerSig = IKeeperRegistrar.register.selector;
     LinkTokenInterface(LINK_TOKEN).transferAndCall(
       keeperRegistrar,
       amountToFund,
-      bytes.concat(registerSig, payload)
+      bytes.concat(IKeeperRegistrar.register.selector, payload)
     );
 
     (state, , ) = IKeeperRegistry(keeperRegistry).getState();
