@@ -126,8 +126,18 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function setWithdrawAddress(address newWithdrawAddress) external onlyFundsAdmin {
-    _linkWithdrawAddress = newWithdrawAddress;
+  function setWithdrawAddress(address withdrawAddress) external onlyFundsAdmin {
+    _linkWithdrawAddress = withdrawAddress;
+  }
+
+  /// @inheritdoc IAaveCLRobotOperator
+  function setFundsAdmin(address fundsAdmin) external onlyFundsAdmin {
+    _fundsAdmin = fundsAdmin;
+  }
+
+  /// @inheritdoc IAaveCLRobotOperator
+  function setMaintenanceAdmin(address maintenanceAdmin) external onlyMaintenanceOrFundsAdmin {
+    _maintenanceAdmin = maintenanceAdmin;
   }
 
   /// @inheritdoc IAaveCLRobotOperator

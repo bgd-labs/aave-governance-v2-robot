@@ -62,9 +62,21 @@ interface IAaveCLRobotOperator {
 
   /**
    * @notice method called by funds admin to set the withdraw address when withdrawing excess link from the automation robot keeeper.
-   * @param newWithdrawAddress withdraw address to withdaw link to.
+   * @param withdrawAddress withdraw address to withdaw link to.
    **/
-  function setWithdrawAddress(address newWithdrawAddress) external;
+  function setWithdrawAddress(address withdrawAddress) external;
+
+  /**
+   * @notice method called by funds admin to set the new funds admin.
+   * @param fundsAdmin address of new funds admin to set.
+   **/
+  function setFundsAdmin(address fundsAdmin) external;
+
+  /**
+   * @notice method called by either funds admin or maintenance admin to set the new maintenance admin.
+   * @param maintenanceAdmin address of new maintenance admin to set.
+   **/
+  function setMaintenanceAdmin(address maintenanceAdmin) external;
 
   /**
    * @notice method called by funds admin/maintenance admin to disable/enabled automation on a specific proposalId for the given automation robot keeper.

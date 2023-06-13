@@ -94,6 +94,32 @@ contract AaveCLRobotOperatorTest is Test {
     assertEq(executeGas, gasLimit);
   }
 
+  function testSetFundsAdmin(address fundsAdmin) public {
+    vm.startPrank(FUNDS_ADMIN);
+    aaveCLRobotOperator.setFundsAdmin(fundsAdmin);
+    vm.stopPrank();
+
+    vm.startPrank(address(10));
+    vm.expectRevert('CALLER_NOT_FUNDS_ADMIN');
+    aaveCLRobotOperator.setWithdrawAddress(fundsAdmin);
+    vm.stopPrank();
+
+    assertEq(aaveCLRobotOperator.getFundsAdmin(), fundsAdmin);
+  }
+
+  function testSetMaintenanceAdmin(address maintenanceAdmin) public {
+    vm.startPrank(FUNDS_ADMIN);
+    aaveCLRobotOperator.setMaintenanceAdmin(maintenanceAdmin);
+    vm.stopPrank();
+
+    vm.startPrank(address(10));
+    vm.expectRevert('CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN');
+    aaveCLRobotOperator.setMaintenanceAdmin(maintenanceAdmin);
+    vm.stopPrank();
+
+    assertEq(aaveCLRobotOperator.getMaintenanceAdmin(), maintenanceAdmin);
+  }
+
   function testSetWithdrawAddress(address newWithdrawAddress) public {
     vm.startPrank(FUNDS_ADMIN);
     aaveCLRobotOperator.setWithdrawAddress(newWithdrawAddress);
