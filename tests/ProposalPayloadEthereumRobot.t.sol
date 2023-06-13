@@ -12,10 +12,7 @@ contract ProposalPayloadEthRobotTest is TestWithExecutor {
   event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeedId);
 
   function setUp() public {
-    vm.createSelectFork(
-      'mainnet',
-      17285700
-    );
+    vm.createSelectFork('mainnet', 17285700);
     _selectPayloadExecutor(AaveGovernanceV2.SHORT_EXECUTOR);
   }
 

@@ -20,7 +20,8 @@ contract ProposalPayloadPolygonRobot {
   address public constant KEEPER_REGISTRAR_ADDRESS = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
   address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
 
-  LinkTokenInterface public constant ERC677_LINK = LinkTokenInterface(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
+  LinkTokenInterface public constant ERC677_LINK =
+    LinkTokenInterface(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
 
   address public immutable POLYGON_ROBOT_KEEPER_ADDRESS;
   address public immutable POLYGON_ROBOT_OPERATOR;
@@ -49,28 +50,17 @@ contract ProposalPayloadPolygonRobot {
 
   function execute() external {
     // transfer aLink from collector to this address
-    AaveV3Polygon.COLLECTOR.transfer(
-      AaveV3PolygonAssets.LINK_A_TOKEN,
-      address(this),
-      LINK_AMOUNT
-    );
+    AaveV3Polygon.COLLECTOR.transfer(AaveV3PolygonAssets.LINK_A_TOKEN, address(this), LINK_AMOUNT);
 
     // Withdraw aLink from the Aave V3 Pool
-    AaveV3Polygon.POOL.withdraw(
-      AaveV3PolygonAssets.LINK_UNDERLYING,
-      LINK_AMOUNT,
-      address(this)
-    );
+    AaveV3Polygon.POOL.withdraw(AaveV3PolygonAssets.LINK_UNDERLYING, LINK_AMOUNT, address(this));
 
     // Swap ERC-20 Link to ERC-677 Link
     IERC20(AaveV3PolygonAssets.LINK_UNDERLYING).approve(address(PEGSWAP), LINK_AMOUNT);
     PEGSWAP.swap(LINK_AMOUNT, AaveV3PolygonAssets.LINK_UNDERLYING, address(ERC677_LINK));
 
     // Transfer ERC-677 Link to the operator
-    ERC677_LINK.transfer(
-      POLYGON_ROBOT_OPERATOR,
-      LINK_AMOUNT
-    );
+    ERC677_LINK.transfer(POLYGON_ROBOT_OPERATOR, LINK_AMOUNT);
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(POLYGON_ROBOT_OPERATOR).register(

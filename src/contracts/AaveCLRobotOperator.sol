@@ -74,18 +74,19 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     address keeperRegistrar
   ) external onlyFundsAdmin returns (uint256) {
     (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(keeperRegistry).getState();
+    // nonce of the registry before the keeper has been registered
     uint256 oldNonce = state.nonce;
 
     bytes memory payload = abi.encode(
-      name,
-      0x0,
-      upkeepContract,
-      gasLimit,
-      address(this),
-      checkData,
-      amountToFund,
-      0,
-      address(this)
+      name, // name of the keeper to register
+      0x0, // encryptedEmail to send alerts to, unused currently
+      upkeepContract, // address of the upkeep contract
+      gasLimit, // max gasLimit which can be used for an performUpkeep action
+      address(this), // admin of the keeper is set to this address of AaveCLRobotOperator
+      checkData, // checkData of the keeper which get passed to the checkUpkeep
+      amountToFund, // amount of link to fund the keeper with
+      0, // source application sending this request
+      address(this) // address of the sender making the request
     );
     LinkTokenInterface(LINK_TOKEN).transferAndCall(
       keeperRegistrar,
@@ -94,7 +95,10 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     );
 
     (state, , ) = IKeeperRegistry(keeperRegistry).getState();
+
+    // checks if the keeper has been registered succesfully by checking that nonce has been incremented on the registry
     if (state.nonce == oldNonce + 1) {
+      // calculates the id for the keeper registered
       uint256 id = uint256(
         keccak256(abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce)))
       );

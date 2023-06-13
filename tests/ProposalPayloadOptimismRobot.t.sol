@@ -12,10 +12,7 @@ contract ProposalPayloadOptimismRobotTest is TestWithExecutor {
   event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeedId);
 
   function setUp() public {
-    vm.createSelectFork(
-      'optimism',
-      99549575
-    );
+    vm.createSelectFork('optimism', 99549575);
     _selectPayloadExecutor(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
   }
 

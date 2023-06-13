@@ -28,7 +28,11 @@ contract Deploy is Script {
     keeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(aaveCLRobotOperator));
 
     // deploy the payload
-    payload = new ProposalPayloadEthereumRobot(address(keeper), address(aaveCLRobotOperator), 1000 ether);
+    payload = new ProposalPayloadEthereumRobot(
+      address(keeper),
+      address(aaveCLRobotOperator),
+      1000 ether
+    );
 
     console.log('Ethereum keeper address', address(keeper));
     console.log('Ethereum operator address', address(aaveCLRobotOperator));

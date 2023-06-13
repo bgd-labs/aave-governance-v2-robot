@@ -69,7 +69,7 @@ The contract to perform admin actions on the Aave Robot Keepers.
 
 <img width="852" alt="Screenshot 2023-05-22 at 12 12 42 PM" src="https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/91250424-c851-4d55-b5a4-75f4d1ae8395">
 
-- `register()` 
+- `register()`
 
   Called by the funds admin of the Robot Operator to register the Chainlink Keeper.
 
@@ -77,9 +77,9 @@ The contract to perform admin actions on the Aave Robot Keepers.
 
   Called by the funds admin of the Robot Operator to cancel the Chainlink Keeper.
 
-- `withdrawLink()` 
+- `withdrawLink()`
 
-  Called by the funds admin of the Robot Operator to withdraw link from the Chainlink Keeper. Note that we can only withdraw link after a keeper has been canceled and certain   blocks have passed after being canceled.
+  Called by the funds admin of the Robot Operator to withdraw link from the Chainlink Keeper. Note that we can only withdraw link after a keeper has been canceled and certain blocks have passed after being canceled.
 
 - `setGasLimit()`
 
@@ -87,7 +87,7 @@ The contract to perform admin actions on the Aave Robot Keepers.
 
 - `toggleDisableAutomationById()`
 
-  Called only by the  maintenance admin or the funds admin to disable / enable automation for a certain proposalId or actionsSetId for a specific Chainlink Keeper.
+  Called only by the maintenance admin or the funds admin to disable / enable automation for a certain proposalId or actionsSetId for a specific Chainlink Keeper.
 
 # Deployment
 

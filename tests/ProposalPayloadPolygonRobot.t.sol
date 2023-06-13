@@ -13,10 +13,7 @@ contract ProposalPayloadPolygonRobotTest is TestWithExecutor {
   event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeedId);
 
   function setUp() public {
-    vm.createSelectFork(
-      'polygon',
-      42856700
-    );
+    vm.createSelectFork('polygon', 42856700);
     _selectPayloadExecutor(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR);
   }
 

@@ -25,10 +25,17 @@ contract Deploy is Script {
       AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR,
       MAINTENANCE_ADMIN
     );
-    keeper = new L2RobotKeeper(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR, address(aaveCLRobotOperator));
+    keeper = new L2RobotKeeper(
+      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR,
+      address(aaveCLRobotOperator)
+    );
 
     // create proposal here and pass the keeper address and the link amount to fund
-    proposal = new ProposalPayloadPolygonRobot(address(keeper), address(aaveCLRobotOperator), 30 ether);
+    proposal = new ProposalPayloadPolygonRobot(
+      address(keeper),
+      address(aaveCLRobotOperator),
+      30 ether
+    );
 
     console.log('Polygon keeper address', address(keeper));
     console.log('Polygon operator address', address(aaveCLRobotOperator));

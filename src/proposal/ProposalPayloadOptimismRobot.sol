@@ -49,7 +49,11 @@ contract ProposalPayloadOptimismRobot {
     );
 
     // withdraw aLink from the Aave V3 Pool
-    AaveV3Optimism.POOL.withdraw(AaveV3OptimismAssets.LINK_UNDERLYING, LINK_AMOUNT, OPTIMISM_ROBOT_OPERATOR);
+    AaveV3Optimism.POOL.withdraw(
+      AaveV3OptimismAssets.LINK_UNDERLYING,
+      LINK_AMOUNT,
+      OPTIMISM_ROBOT_OPERATOR
+    );
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(OPTIMISM_ROBOT_OPERATOR).register(

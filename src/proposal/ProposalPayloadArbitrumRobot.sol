@@ -48,7 +48,11 @@ contract ProposalPayloadArbitrumRobot {
     );
 
     // withdraw aLink from the Aave V3 Pool
-    AaveV3Arbitrum.POOL.withdraw(AaveV3ArbitrumAssets.LINK_UNDERLYING, LINK_AMOUNT, ARBITRUM_ROBOT_OPERATOR);
+    AaveV3Arbitrum.POOL.withdraw(
+      AaveV3ArbitrumAssets.LINK_UNDERLYING,
+      LINK_AMOUNT,
+      ARBITRUM_ROBOT_OPERATOR
+    );
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(ARBITRUM_ROBOT_OPERATOR).register(

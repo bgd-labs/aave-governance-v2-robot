@@ -12,10 +12,7 @@ contract ProposalPayloadArbitrumRobotTest is TestWithExecutor {
   event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeedId);
 
   function setUp() public {
-    vm.createSelectFork(
-      'arbitrum',
-      91945000
-    );
+    vm.createSelectFork('arbitrum', 91945000);
     _selectPayloadExecutor(AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR);
   }
 
