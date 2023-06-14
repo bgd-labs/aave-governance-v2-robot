@@ -63,6 +63,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     _maintenanceAdmin = maintenanceAdmin;
   }
 
+  /// @notice In order to fund the keeper we need to approve the Link token amount to this contract
   /// @inheritdoc IAaveCLRobotOperator
   function register(
     string memory name,
@@ -73,6 +74,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     address keeperRegistry,
     address keeperRegistrar
   ) external onlyFundsAdmin returns (uint256) {
+    LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amountToFund);
     (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(keeperRegistry).getState();
     // nonce of the registry before the keeper has been registered
     uint256 oldNonce = state.nonce;
@@ -122,6 +124,14 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
       _keepers[upkeep].id,
       _linkWithdrawAddress
     );
+  }
+
+  /// @notice In order to refill the keeper we need to approve the Link token amount to this contract
+  /// @inheritdoc IAaveCLRobotOperator
+  function refillKeeper(address upkeep, uint96 amount) external {
+    LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amount);
+    LinkTokenInterface(LINK_TOKEN).approve(_keepers[upkeep].registry, amount);
+    IKeeperRegistry(_keepers[upkeep].registry).addFunds(_keepers[upkeep].id, amount);
   }
 
   /// @inheritdoc IAaveCLRobotOperator

@@ -41,6 +41,13 @@ interface IAaveCLRobotOperator {
   ) external returns (uint256);
 
   /**
+   * @notice method called to refill the keeper.
+   * @param upkeep - address of the upkeep contract.
+   * @param amount - amount of LINK to refill the keeper with.
+   **/
+  function refillKeeper(address upkeep, uint96 amount) external;
+
+  /**
    * @notice method called by funds admin to cancel the automation robot keeper.
    * @param upkeep address of the upkeep robot keeper contract to cancel.
    **/

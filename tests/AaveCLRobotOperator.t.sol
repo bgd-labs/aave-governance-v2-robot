@@ -52,6 +52,20 @@ contract AaveCLRobotOperatorTest is Test {
     assertEq(admin, address(aaveCLRobotOperator));
   }
 
+  function testRefill() public {
+    (uint256 id, address upkeep) = _registerKeeper();
+    (, , , uint96 previousBalance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
+    uint96 amountToFund = 10 ether;
+
+    vm.startPrank(LINK_WHALE);
+    LINK_TOKEN.approve(address(aaveCLRobotOperator), amountToFund);
+    aaveCLRobotOperator.refillKeeper(upkeep, amountToFund);
+    vm.stopPrank();
+
+    (, , , uint96 balance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
+    assertEq(balance, previousBalance + amountToFund);
+  }
+
   function testCancelAndWithdraw() public {
     assertEq(LINK_TOKEN.balanceOf(WITHDRAW_ADDRESS), 0);
     (uint256 id, address upkeep) = _registerKeeper();
@@ -169,10 +183,11 @@ contract AaveCLRobotOperatorTest is Test {
 
   function _registerKeeper() internal returns (uint256, address) {
     vm.startPrank(LINK_WHALE);
-    LINK_TOKEN.transfer(address(aaveCLRobotOperator), 100 ether);
+    LINK_TOKEN.transfer(FUNDS_ADMIN, 100 ether);
     vm.stopPrank();
 
     vm.startPrank(FUNDS_ADMIN);
+    LINK_TOKEN.approve(address(aaveCLRobotOperator), 100 ether);
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
       address(AaveGovernanceV2.GOV),
       address(aaveCLRobotOperator)
