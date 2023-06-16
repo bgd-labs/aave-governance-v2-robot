@@ -19,6 +19,8 @@ contract L2RobotKeeperTest is Test {
       address(0),
       address(0),
       address(0),
+      address(0),
+      address(0),
       address(5)
     );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
@@ -50,6 +52,8 @@ contract L2RobotKeeperTest is Test {
       address(0),
       address(0),
       address(0),
+      address(0),
+      address(0),
       address(5)
     );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
@@ -78,6 +82,8 @@ contract L2RobotKeeperTest is Test {
       address(0),
       address(0),
       address(0),
+      address(0),
+      address(0),
       address(5)
     );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
@@ -103,6 +109,8 @@ contract L2RobotKeeperTest is Test {
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
     AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
+      address(0),
+      address(0),
       address(0),
       address(0),
       address(0),

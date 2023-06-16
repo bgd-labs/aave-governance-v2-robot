@@ -17,6 +17,12 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
   address public immutable LINK_TOKEN;
 
+  /// @inheritdoc IAaveCLRobotOperator
+  address public immutable KEEPER_REGISTRY;
+
+  /// @inheritdoc IAaveCLRobotOperator
+  address public immutable KEEPER_REGISTRAR;
+
   address internal _fundsAdmin;
   address internal _maintenanceAdmin;
   address internal _linkWithdrawAddress;
@@ -47,16 +53,22 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   /**
    * @param linkTokenAddress address of the ERC-677 link token contract.
+   * @param keeperRegistry address of the chainlink registry.
+   * @param keeperRegistrar address of the chainlink registrar.
    * @param linkWithdrawAddress withdrawal address to send the exccess link after cancelling the keeper.
    * @param fundsAdmin address of funds admin.
    * @param maintenanceAdmin address of the maintenance admin.
    */
   constructor(
     address linkTokenAddress,
+    address keeperRegistry,
+    address keeperRegistrar,
     address linkWithdrawAddress,
     address fundsAdmin,
     address maintenanceAdmin
   ) {
+    KEEPER_REGISTRY = keeperRegistry;
+    KEEPER_REGISTRAR = keeperRegistrar;
     LINK_TOKEN = linkTokenAddress;
     _linkWithdrawAddress = linkWithdrawAddress;
     _fundsAdmin = fundsAdmin;
@@ -69,13 +81,10 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     string memory name,
     address upkeepContract,
     uint32 gasLimit,
-    bytes memory checkData,
-    uint96 amountToFund,
-    address keeperRegistry,
-    address keeperRegistrar
+    uint96 amountToFund
   ) external onlyFundsAdmin returns (uint256) {
     LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amountToFund);
-    (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(keeperRegistry).getState();
+    (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(KEEPER_REGISTRY).getState();
     // nonce of the registry before the keeper has been registered
     uint256 oldNonce = state.nonce;
 
@@ -85,28 +94,27 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
       upkeepContract, // address of the upkeep contract
       gasLimit, // max gasLimit which can be used for an performUpkeep action
       address(this), // admin of the keeper is set to this address of AaveCLRobotOperator
-      checkData, // checkData of the keeper which get passed to the checkUpkeep
+      '', // checkData of the keeper which get passed to the checkUpkeep, unused currently
       amountToFund, // amount of link to fund the keeper with
       0, // source application sending this request
       address(this) // address of the sender making the request
     );
     LinkTokenInterface(LINK_TOKEN).transferAndCall(
-      keeperRegistrar,
+      KEEPER_REGISTRAR,
       amountToFund,
       bytes.concat(IKeeperRegistrar.register.selector, payload)
     );
 
-    (state, , ) = IKeeperRegistry(keeperRegistry).getState();
+    (state, , ) = IKeeperRegistry(KEEPER_REGISTRY).getState();
 
     // checks if the keeper has been registered succesfully by checking that nonce has been incremented on the registry
     if (state.nonce == oldNonce + 1) {
       // calculates the id for the keeper registered
       uint256 id = uint256(
-        keccak256(abi.encodePacked(blockhash(block.number - 1), keeperRegistry, uint32(oldNonce)))
+        keccak256(abi.encodePacked(blockhash(block.number - 1), KEEPER_REGISTRY, uint32(oldNonce)))
       );
       _keepers[upkeepContract].id = id;
       _keepers[upkeepContract].name = name;
-      _keepers[upkeepContract].registry = keeperRegistry;
       return id;
     } else {
       revert('AUTO_APPROVE_DISABLED');
@@ -115,28 +123,25 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   /// @inheritdoc IAaveCLRobotOperator
   function cancel(address upkeep) external onlyFundsAdmin {
-    IKeeperRegistry(_keepers[upkeep].registry).cancelUpkeep(_keepers[upkeep].id);
+    IKeeperRegistry(KEEPER_REGISTRY).cancelUpkeep(_keepers[upkeep].id);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
   function withdrawLink(address upkeep) external {
-    IKeeperRegistry(_keepers[upkeep].registry).withdrawFunds(
-      _keepers[upkeep].id,
-      _linkWithdrawAddress
-    );
+    IKeeperRegistry(KEEPER_REGISTRY).withdrawFunds(_keepers[upkeep].id, _linkWithdrawAddress);
   }
 
   /// @notice In order to refill the keeper we need to approve the Link token amount to this contract
   /// @inheritdoc IAaveCLRobotOperator
   function refillKeeper(address upkeep, uint96 amount) external {
     LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amount);
-    LinkTokenInterface(LINK_TOKEN).approve(_keepers[upkeep].registry, amount);
-    IKeeperRegistry(_keepers[upkeep].registry).addFunds(_keepers[upkeep].id, amount);
+    LinkTokenInterface(LINK_TOKEN).approve(KEEPER_REGISTRY, amount);
+    IKeeperRegistry(KEEPER_REGISTRY).addFunds(_keepers[upkeep].id, amount);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
   function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
-    IKeeperRegistry(_keepers[upkeep].registry).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
+    IKeeperRegistry(KEEPER_REGISTRY).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
   }
 
   /// @inheritdoc IAaveCLRobotOperator

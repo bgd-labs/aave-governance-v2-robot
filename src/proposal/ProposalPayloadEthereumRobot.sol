@@ -15,9 +15,6 @@ import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTok
  * - Register the Chainlink Keeper for governance v2 via the operator contract
  */
 contract ProposalPayloadEthereumRobot {
-  address public constant KEEPER_REGISTRAR_ADDRESS = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
-  address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
-
   address public immutable ETH_ROBOT_KEEPER_ADDRESS;
   address public immutable ETH_ROBOT_OPERATOR;
   uint256 public immutable LINK_AMOUNT;
@@ -57,17 +54,17 @@ contract ProposalPayloadEthereumRobot {
     );
 
     // approve Link to the operator in order to register
-    LinkTokenInterface(AaveV2EthereumAssets.LINK_UNDERLYING).approve(ETH_ROBOT_OPERATOR, LINK_AMOUNT);
+    LinkTokenInterface(AaveV2EthereumAssets.LINK_UNDERLYING).approve(
+      ETH_ROBOT_OPERATOR,
+      LINK_AMOUNT
+    );
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(ETH_ROBOT_OPERATOR).register(
       'AaveEthRobotKeeperV2',
       ETH_ROBOT_KEEPER_ADDRESS,
       2_000_000,
-      '',
-      safeToUint96(LINK_AMOUNT),
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR_ADDRESS
+      safeToUint96(LINK_AMOUNT)
     );
     emit ChainlinkUpkeepRegistered('AaveEthRobotKeeperV2', id);
   }

@@ -15,9 +15,6 @@ import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTok
  * - Register the Chainlink Keeper for optimism bridge executor via the operator contract
  */
 contract ProposalPayloadOptimismRobot {
-  address public constant KEEPER_REGISTRAR_ADDRESS = 0x4F3AF332A30973106Fe146Af0B4220bBBeA748eC;
-  address public constant KEEPER_REGISTRY = 0x75c0530885F385721fddA23C539AF3701d6183D4;
-
   address public immutable OPTIMISM_ROBOT_KEEPER_ADDRESS;
   address public immutable OPTIMISM_ROBOT_OPERATOR;
   uint256 public immutable LINK_AMOUNT;
@@ -50,24 +47,20 @@ contract ProposalPayloadOptimismRobot {
     );
 
     // withdraw aLink from the Aave V3 Pool
-    AaveV3Optimism.POOL.withdraw(
-      AaveV3OptimismAssets.LINK_UNDERLYING,
-      LINK_AMOUNT,
-      address(this)
-    );
+    AaveV3Optimism.POOL.withdraw(AaveV3OptimismAssets.LINK_UNDERLYING, LINK_AMOUNT, address(this));
 
     // approve Link to the operator in order to register
-    LinkTokenInterface(AaveV3OptimismAssets.LINK_UNDERLYING).approve(OPTIMISM_ROBOT_OPERATOR, LINK_AMOUNT);
+    LinkTokenInterface(AaveV3OptimismAssets.LINK_UNDERLYING).approve(
+      OPTIMISM_ROBOT_OPERATOR,
+      LINK_AMOUNT
+    );
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(OPTIMISM_ROBOT_OPERATOR).register(
       'AaveOptRobotKeeperV2',
       OPTIMISM_ROBOT_KEEPER_ADDRESS,
       5_000_000,
-      '',
-      safeToUint96(LINK_AMOUNT),
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR_ADDRESS
+      safeToUint96(LINK_AMOUNT)
     );
     emit ChainlinkUpkeepRegistered('AaveOptRobotKeeperV2', id);
   }

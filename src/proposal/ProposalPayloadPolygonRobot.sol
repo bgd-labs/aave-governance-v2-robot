@@ -17,9 +17,6 @@ import {IPegSwap} from '../dependencies/IPegSwap.sol';
  * - Register the Chainlink Keeper for polygon bridge executor via the operator contract
  */
 contract ProposalPayloadPolygonRobot {
-  address public constant KEEPER_REGISTRAR_ADDRESS = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
-  address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
-
   LinkTokenInterface public constant ERC677_LINK =
     LinkTokenInterface(0xb0897686c545045aFc77CF20eC7A532E3120E0F1);
 
@@ -67,10 +64,7 @@ contract ProposalPayloadPolygonRobot {
       'AavePolRobotKeeperV2',
       POLYGON_ROBOT_KEEPER_ADDRESS,
       5_000_000,
-      '',
-      safeToUint96(LINK_AMOUNT),
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR_ADDRESS
+      safeToUint96(LINK_AMOUNT)
     );
     emit ChainlinkUpkeepRegistered('AavePolRobotKeeperV2', id);
   }

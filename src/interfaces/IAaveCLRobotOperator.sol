@@ -11,33 +11,25 @@ interface IAaveCLRobotOperator {
    * @notice holds the keeper info registered via the operator.
    * @param id chainlink id of the registered keeper.
    * @param name name of the registered keeper.
-   * @param registry chainlink registry of the registered keeper.
    */
   struct KeeperInfo {
     uint256 id;
     string name;
-    address registry;
   }
 
   /**
    * @notice method called by funds admin to register the automation robot keeper.
    * @param name - name of keeper.
-   * @param upkeepContract - upkeepContract of the keeper .
+   * @param upkeepContract - upkeepContract of the keeper.
    * @param gasLimit - max gasLimit which the chainlink automation node can execute for the automation.
-   * @param checkData - checkData of the keeper which get passed to the checkUpkeep.
    * @param amountToFund - amount of link to fund the keeper with.
-   * @param keeperRegistry - chainlink registry of the keeper.
-   * @param keeperRegistrar - chainlink registrar of the keeper.
    * @return chainlink id for the registered keeper.
    **/
   function register(
     string memory name,
     address upkeepContract,
     uint32 gasLimit,
-    bytes memory checkData,
-    uint96 amountToFund,
-    address keeperRegistry,
-    address keeperRegistrar
+    uint96 amountToFund
   ) external returns (uint256);
 
   /**
@@ -128,8 +120,20 @@ interface IAaveCLRobotOperator {
   function getKeeperInfo(address upkeep) external view returns (KeeperInfo memory);
 
   /**
-   * @notice method to get the address ERC-677 link token.
+   * @notice method to get the address of ERC-677 link token.
    * @return link token address.
    */
   function LINK_TOKEN() external returns (address);
+
+  /**
+   * @notice method to get the address of chainlink keeper registry contract.
+   * @return keeper registry address.
+   */
+  function KEEPER_REGISTRY() external returns (address);
+
+  /**
+   * @notice method to get the address of chainlink keeper registrar contract.
+   * @return keeper registrar address.
+   */
+  function KEEPER_REGISTRAR() external returns (address);
 }

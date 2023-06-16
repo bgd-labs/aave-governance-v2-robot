@@ -26,6 +26,8 @@ contract AaveCLRobotOperatorTest is Test {
     );
     aaveCLRobotOperator = new AaveCLRobotOperator(
       address(LINK_TOKEN),
+      REGISTRY,
+      REGISTRAR,
       WITHDRAW_ADDRESS,
       FUNDS_ADMIN,
       MAINTENANCE_ADMIN
@@ -177,7 +179,6 @@ contract AaveCLRobotOperatorTest is Test {
     (uint256 id, address upkeep) = _registerKeeper();
     AaveCLRobotOperator.KeeperInfo memory keeperInfo = aaveCLRobotOperator.getKeeperInfo(upkeep);
     assertEq(keeperInfo.id, id);
-    assertEq(keeperInfo.registry, REGISTRY);
     assertEq(keeperInfo.name, 'testName');
   }
 
@@ -196,10 +197,7 @@ contract AaveCLRobotOperatorTest is Test {
       'testName',
       address(ethRobotKeeper),
       1_000_000,
-      '',
-      100 ether,
-      REGISTRY,
-      REGISTRAR
+      100 ether
     );
     vm.stopPrank();
 

@@ -18,6 +18,8 @@ contract EthRobotKeeperTest is Test {
       address(0),
       address(0),
       address(0),
+      address(0),
+      address(0),
       address(0)
     );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
@@ -41,6 +43,8 @@ contract EthRobotKeeperTest is Test {
       16620260 // Feb-13-2023
     );
     AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
+      address(0),
+      address(0),
       address(0),
       address(0),
       address(0),
@@ -68,6 +72,8 @@ contract EthRobotKeeperTest is Test {
       12172974 // Apr-04-2021
     );
     AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
+      address(0),
+      address(0),
       address(0),
       address(0),
       address(0),
@@ -99,6 +105,8 @@ contract EthRobotKeeperTest is Test {
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
 
     AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
+      address(0),
+      address(0),
       address(0),
       address(0),
       address(0),
@@ -143,6 +151,8 @@ contract EthRobotKeeperTest is Test {
 
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
     AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
+      address(0),
+      address(0),
       address(0),
       address(0),
       address(0),

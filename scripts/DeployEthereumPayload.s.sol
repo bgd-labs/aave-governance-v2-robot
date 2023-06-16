@@ -13,6 +13,8 @@ contract Deploy is Script {
   EthRobotKeeper public keeper;
   AaveCLRobotOperator public aaveCLRobotOperator;
   ProposalPayloadEthereumRobot public payload;
+  address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
+  address public constant KEEPER_REGISTRAR = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
   address public constant MAINTENANCE_ADMIN = 0xe3FD707583932a99513a5c65c8463De769f5DAdF;
 
   function run() external {
@@ -20,6 +22,8 @@ contract Deploy is Script {
     // deploy the robot operator
     aaveCLRobotOperator = new AaveCLRobotOperator(
       AaveV3EthereumAssets.LINK_UNDERLYING,
+      KEEPER_REGISTRY,
+      KEEPER_REGISTRAR,
       address(AaveV3Ethereum.COLLECTOR),
       AaveGovernanceV2.SHORT_EXECUTOR,
       MAINTENANCE_ADMIN
