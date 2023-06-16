@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 import {AaveCLRobotOperator} from '../contracts/AaveCLRobotOperator.sol';
 import {AaveV3Optimism, AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
+import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 
 /**
  * @title ProposalPayloadOptimismRobot
@@ -52,8 +53,11 @@ contract ProposalPayloadOptimismRobot {
     AaveV3Optimism.POOL.withdraw(
       AaveV3OptimismAssets.LINK_UNDERLYING,
       LINK_AMOUNT,
-      OPTIMISM_ROBOT_OPERATOR
+      address(this)
     );
+
+    // approve Link to the operator in order to register
+    LinkTokenInterface(AaveV3OptimismAssets.LINK_UNDERLYING).approve(OPTIMISM_ROBOT_OPERATOR, LINK_AMOUNT);
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(OPTIMISM_ROBOT_OPERATOR).register(

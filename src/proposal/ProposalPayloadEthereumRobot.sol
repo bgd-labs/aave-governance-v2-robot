@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {AaveCLRobotOperator} from '../contracts/AaveCLRobotOperator.sol';
 import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
 import {AaveV2Ethereum, AaveV2EthereumAssets} from 'aave-address-book/AaveV2Ethereum.sol';
+import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 
 /**
  * @title ProposalPayloadEthereumRobot
@@ -50,10 +51,13 @@ contract ProposalPayloadEthereumRobot {
 
     // withdraw link to the operator contract
     AaveV2Ethereum.POOL.withdraw(
-      address(AaveV3EthereumAssets.LINK_UNDERLYING),
+      address(AaveV2EthereumAssets.LINK_UNDERLYING),
       LINK_AMOUNT,
-      ETH_ROBOT_OPERATOR
+      address(this)
     );
+
+    // approve Link to the operator in order to register
+    LinkTokenInterface(AaveV2EthereumAssets.LINK_UNDERLYING).approve(ETH_ROBOT_OPERATOR, LINK_AMOUNT);
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(ETH_ROBOT_OPERATOR).register(

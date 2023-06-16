@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {AaveCLRobotOperator} from '../contracts/AaveCLRobotOperator.sol';
 import {AaveV3Arbitrum, AaveV3ArbitrumAssets} from 'aave-address-book/AaveV3Arbitrum.sol';
+import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 
 /**
  * @title ProposalPayloadArbitrumRobot
@@ -51,8 +52,11 @@ contract ProposalPayloadArbitrumRobot {
     AaveV3Arbitrum.POOL.withdraw(
       AaveV3ArbitrumAssets.LINK_UNDERLYING,
       LINK_AMOUNT,
-      ARBITRUM_ROBOT_OPERATOR
+      address(this)
     );
+
+    // approve Link to the operator in order to register
+    LinkTokenInterface(AaveV3ArbitrumAssets.LINK_UNDERLYING).approve(ARBITRUM_ROBOT_OPERATOR, LINK_AMOUNT);
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(ARBITRUM_ROBOT_OPERATOR).register(

@@ -59,8 +59,8 @@ contract ProposalPayloadPolygonRobot {
     IERC20(AaveV3PolygonAssets.LINK_UNDERLYING).approve(address(PEGSWAP), LINK_AMOUNT);
     PEGSWAP.swap(LINK_AMOUNT, AaveV3PolygonAssets.LINK_UNDERLYING, address(ERC677_LINK));
 
-    // Transfer ERC-677 Link to the operator
-    ERC677_LINK.transfer(POLYGON_ROBOT_OPERATOR, LINK_AMOUNT);
+    // approve Link to the operator in order to register
+    ERC677_LINK.approve(POLYGON_ROBOT_OPERATOR, LINK_AMOUNT);
 
     // register the keeper via the operator
     uint256 id = AaveCLRobotOperator(POLYGON_ROBOT_OPERATOR).register(
