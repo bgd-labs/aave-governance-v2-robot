@@ -67,27 +67,35 @@ The keeper contracts are deployed and registered for ethereum and also for all L
 
 The contract to perform admin actions on the Aave Robot Keepers.
 
-<img width="852" alt="Screenshot 2023-05-22 at 12 12 42 PM" src="https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/91250424-c851-4d55-b5a4-75f4d1ae8395">
+<img width="1025" alt="Screenshot 2023-06-20 at 11 04 48 PM" src="https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/846605a4-2b57-401d-b1ff-727d0a7ceb3b">
 
 - `register()`
 
-  Called by the funds admin of the Robot Operator to register the Chainlink Keeper.
+  Called by the governance level 1 executor to register the Chainlink Keeper with the admin of the keeper as the operator contract.
 
 - `cancel()`
 
-  Called by the funds admin of the Robot Operator to cancel the Chainlink Keeper.
+  Called by the governance level 1 executor to cancel the Chainlink Keeper.
 
 - `withdrawLink()`
 
-  Called by the funds admin of the Robot Operator to withdraw link from the Chainlink Keeper. Note that we can only withdraw link after a keeper has been canceled and certain blocks have passed after being canceled.
+  Can be called in a permissionless way by anyone to withdraw link from the Chainlink Keeper to the Aave Collector. Note that we can only withdraw link after a keeper has been canceled and 50 blocks have passed after being canceled.
 
 - `setGasLimit()`
 
-  Called by the maintenance admin or the funds admin to set the max gas limit for execution by the Chainlink Keeper.
+  Called by the governance level 1 executor to set the max gas limit for execution by the Chainlink Keeper.
 
-- `toggleDisableAutomationById()`
+- `refillKeeper()`
 
-  Called only by the maintenance admin or the funds admin to disable / enable automation for a certain proposalId or actionsSetId for a specific Chainlink Keeper.
+  Can be called in a permissionless way by anyone to refill the keeper with link tokens for gas. Note that the sender has to approve link tokens to the operator contract first in order to refill the Chainlink Keeper.
+
+- `setWithdrawAddress()`
+
+  Called by the governance level 1 executor, to set the withdraw address which is initially set to the Aave Collector, which is used to receive link after canceling and withdrawing funds from the Chainlink Keeper.
+
+- `pause() / unpause()`
+
+  Called by the robot guardian to pause/unpause the Chainlink Keeper.
 
 # Deployment
 
