@@ -7,7 +7,7 @@ import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfa
  * @title IL2RobotKeeper
  * @author BGD Labs
  * @notice Defines the interface for the contract to automate actions on aave governance v2 bridge executors.
- **/
+ */
 interface IL2RobotKeeper is AutomationCompatibleInterface {
   /**
    * @dev Emitted when performUpkeep is called and no actions are executed.
@@ -27,7 +27,7 @@ interface IL2RobotKeeper is AutomationCompatibleInterface {
   /**
    * @notice Actions that can be performed by the robot on the bridge executor.
    * @param PerformExecute: performs execute action on the bridge executor.
-   **/
+   */
   enum ProposalAction {
     PerformExecute
   }
@@ -41,6 +41,19 @@ interface IL2RobotKeeper is AutomationCompatibleInterface {
     uint256 id;
     ProposalAction action;
   }
+
+  /**
+   * @notice method called by owner / robot guardian to disable/enabled automation on a specific actionsSetId.
+   * @param actionsSetId id for which we need to disable/enable automation.
+   */
+  function toggleDisableAutomationById(uint256 actionsSetId) external;
+
+  /**
+   * @notice method to check if automation for the actionsSetId is disabled/enabled.
+   * @param actionsSetId id to check if automation is disabled or not.
+   * @return bool if automation for actionsSetId is disabled or not.
+   */
+  function isDisabled(uint256 actionsSetId) external view returns (bool);
 
   /**
    * @notice method to get the address of the aave bridge executor contract.
@@ -59,10 +72,4 @@ interface IL2RobotKeeper is AutomationCompatibleInterface {
    * @return max number of skips.
    */
   function MAX_SKIP() external returns (uint256);
-
-  /**
-   * @notice method to get the address of robot operator which performs the admin actions on the keeper.
-   * @return robot operator contract address.
-   */
-  function ROBOT_OPERATOR() external returns (address);
 }

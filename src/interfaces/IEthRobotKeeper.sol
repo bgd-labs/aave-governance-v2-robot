@@ -7,7 +7,7 @@ import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfa
  * @title IEthRobotKeeper
  * @author BGD Labs
  * @notice Defines the interface for the contract to automate actions on aave governance v2 proposals Eth Mainnet.
- **/
+ */
 interface IEthRobotKeeper is AutomationCompatibleInterface {
   /**
    * @dev Emitted when performUpkeep is called and no actions are executed.
@@ -29,7 +29,7 @@ interface IEthRobotKeeper is AutomationCompatibleInterface {
    * @param PerformQueue: performs queue action on the governance contract.
    * @param PerformExecute: performs execute action on the governance contract.
    * @param PerformCancel: performs cancel action on the governance contract.
-   **/
+   */
   enum ProposalAction {
     PerformQueue,
     PerformExecute,
@@ -45,6 +45,19 @@ interface IEthRobotKeeper is AutomationCompatibleInterface {
     uint256 id;
     ProposalAction action;
   }
+
+  /**
+   * @notice method called by owner / robot guardian to disable/enabled automation on a specific proposalId.
+   * @param proposalId proposalId for which we need to disable/enable automation.
+   */
+  function toggleDisableAutomationById(uint256 proposalId) external;
+
+  /**
+   * @notice method to check if automation for the proposalId is disabled/enabled.
+   * @param proposalId proposalId to check if automation is disabled or not.
+   * @return bool if automation for proposalId is disabled or not.
+   */
+  function isDisabled(uint256 proposalId) external view returns (bool);
 
   /**
    * @notice method to get the address of the aave governance v2 contract.
@@ -63,10 +76,4 @@ interface IEthRobotKeeper is AutomationCompatibleInterface {
    * @return max number of skips.
    */
   function MAX_SKIP() external returns (uint256);
-
-  /**
-   * @notice method to get the address of robot operator which performs the admin actions on the keeper.
-   * @return robot operator contract address.
-   */
-  function ROBOT_OPERATOR() external returns (address);
 }

@@ -5,6 +5,7 @@ import {IAaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IProposalValidator} from '../interfaces/IProposalValidator.sol';
 import {IEthRobotKeeper, AutomationCompatibleInterface} from '../interfaces/IEthRobotKeeper.sol';
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
+import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 
 /**
  * @title EthRobotKeeper
@@ -13,12 +14,9 @@ import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
  * - checks if the proposal state could be moved to queued, executed or cancelled
  * - moves the proposal to queued/executed/cancelled if all the conditions are met
  */
-contract EthRobotKeeper is IEthRobotKeeper {
+contract EthRobotKeeper is Ownable, IEthRobotKeeper {
   /// @inheritdoc IEthRobotKeeper
   address public immutable GOVERNANCE_V2;
-
-  /// @inheritdoc IEthRobotKeeper
-  address public immutable ROBOT_OPERATOR;
 
   /// @inheritdoc IEthRobotKeeper
   uint256 public constant MAX_ACTIONS = 25;
@@ -26,15 +24,15 @@ contract EthRobotKeeper is IEthRobotKeeper {
   /// @inheritdoc IEthRobotKeeper
   uint256 public constant MAX_SKIP = 20;
 
+  mapping(uint256 => bool) internal _disabledProposals;
+
   error NoActionCanBePerformed();
 
   /**
    * @param governanceV2 address of the governance contract.
-   * @param robotOperator address of the robot operator contract.
    */
-  constructor(address governanceV2, address robotOperator) {
+  constructor(address governanceV2) {
     GOVERNANCE_V2 = governanceV2;
-    ROBOT_OPERATOR = robotOperator;
   }
 
   /**
@@ -59,7 +57,7 @@ contract EthRobotKeeper is IEthRobotKeeper {
       IAaveGovernanceV2.ProposalWithoutVotes memory proposal = IAaveGovernanceV2(GOVERNANCE_V2)
         .getProposalById(proposalId);
 
-      if (!IAaveCLRobotOperator(ROBOT_OPERATOR).isProposalDisabled(address(this), proposalId)) {
+      if (!isDisabled(proposalId)) {
         if (_isProposalInFinalState(proposalState)) {
           skipCount++;
         } else {
@@ -144,6 +142,18 @@ contract EthRobotKeeper is IEthRobotKeeper {
     }
 
     if (!isActionPerformed) revert NoActionCanBePerformed();
+  }
+
+  /// @inheritdoc IEthRobotKeeper
+  function toggleDisableAutomationById(
+    uint256 proposalId
+  ) external onlyOwner {
+    _disabledProposals[proposalId] = !_disabledProposals[proposalId];
+  }
+
+  /// @inheritdoc IEthRobotKeeper
+  function isDisabled(uint256 proposalId) public view returns (bool) {
+    return _disabledProposals[proposalId];
   }
 
   /**

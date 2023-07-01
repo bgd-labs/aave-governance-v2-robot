@@ -5,6 +5,7 @@ import {IAaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/IExecutorBase.sol';
 import {IL2RobotKeeper, AutomationCompatibleInterface} from '../interfaces/IL2RobotKeeper.sol';
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
+import {Ownable} from 'solidity-utils/contracts/oz-common/Ownable.sol';
 
 /**
  * @title L2RobotKeeper
@@ -13,12 +14,9 @@ import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
  * - checks if the proposal actionsSet state could be moved to executed
  * - moves the proposal actionsSet to executed if all the conditions are met
  */
-contract L2RobotKeeper is IL2RobotKeeper {
+contract L2RobotKeeper is Ownable, IL2RobotKeeper {
   /// @inheritdoc IL2RobotKeeper
   address public immutable BRIDGE_EXECUTOR;
-
-  /// @inheritdoc IL2RobotKeeper
-  address public immutable ROBOT_OPERATOR;
 
   /// @inheritdoc IL2RobotKeeper
   uint256 public constant MAX_ACTIONS = 25;
@@ -26,15 +24,15 @@ contract L2RobotKeeper is IL2RobotKeeper {
   /// @inheritdoc IL2RobotKeeper
   uint256 public constant MAX_SKIP = 20;
 
+  mapping(uint256 => bool) internal _disabledActionsSets;
+
   error NoActionCanBePerformed();
 
   /**
    * @param bridgeExecutor address of the bridge executor contract.
-   * @param robotOperator address of the robot operator contract.
    */
-  constructor(address bridgeExecutor, address robotOperator) {
+  constructor(address bridgeExecutor) {
     BRIDGE_EXECUTOR = bridgeExecutor;
-    ROBOT_OPERATOR = robotOperator;
   }
 
   /**
@@ -54,7 +52,7 @@ contract L2RobotKeeper is IL2RobotKeeper {
     while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
       uint256 actionsSetId = index - 1;
 
-      if (!IAaveCLRobotOperator(ROBOT_OPERATOR).isProposalDisabled(address(this), actionsSetId)) {
+      if (!isDisabled(actionsSetId)) {
         if (_canActionSetBeExecuted(actionsSetId)) {
           skipCount = 0;
           actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
@@ -105,6 +103,18 @@ contract L2RobotKeeper is IL2RobotKeeper {
     }
 
     if (!isActionPerformed) revert NoActionCanBePerformed();
+  }
+
+  /// @inheritdoc IL2RobotKeeper
+  function toggleDisableAutomationById(
+    uint256 actionsSetId
+  ) external onlyOwner {
+    _disabledActionsSets[actionsSetId] = !_disabledActionsSets[actionsSetId];
+  }
+
+  /// @inheritdoc IL2RobotKeeper
+  function isDisabled(uint256 actionsSetId) public view returns (bool) {
+    return _disabledActionsSets[actionsSetId];
   }
 
   /**

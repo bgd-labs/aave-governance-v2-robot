@@ -29,9 +29,6 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
 
   mapping(address upkeep => KeeperInfo) internal _keepers;
 
-  mapping(address upkeep => mapping(uint256 proposalId => bool isDisabled))
-    internal _disabledProposals;
-
   /**
    * @dev Only funds admin can call functions marked by this modifier.
    */
@@ -157,19 +154,6 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
   function setMaintenanceAdmin(address maintenanceAdmin) external onlyMaintenanceOrFundsAdmin {
     _maintenanceAdmin = maintenanceAdmin;
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function toggleDisableAutomationById(
-    address upkeep,
-    uint256 proposalId
-  ) external onlyMaintenanceOrFundsAdmin {
-    _disabledProposals[upkeep][proposalId] = !_disabledProposals[upkeep][proposalId];
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function isProposalDisabled(address upkeep, uint256 proposalId) external view returns (bool) {
-    return _disabledProposals[upkeep][proposalId];
   }
 
   /// @inheritdoc IAaveCLRobotOperator
