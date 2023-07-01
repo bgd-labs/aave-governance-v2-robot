@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {Test} from 'forge-std/Test.sol';
 import {EthRobotKeeper} from '../src/contracts/EthRobotKeeper.sol';
 import {IAaveGovernanceV2, AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
 import {GovernanceHelpers} from './helpers/GovernanceHelpers.sol';
 import 'forge-std/console.sol';
 
@@ -14,17 +13,9 @@ contract EthRobotKeeperTest is Test {
       'mainnet',
       16613098 // Feb-12-2023
     );
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0)
-    );
+
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
     IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(153);
     assertEq(uint256(proposalState), 4);
@@ -42,17 +33,8 @@ contract EthRobotKeeperTest is Test {
       'mainnet',
       16620260 // Feb-13-2023
     );
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0)
-    );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
 
     IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(153);
@@ -71,17 +53,9 @@ contract EthRobotKeeperTest is Test {
       'mainnet',
       12172974 // Apr-04-2021
     );
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0)
-    );
+
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
 
     IAaveGovernanceV2.ProposalState proposalState = AaveGovernanceV2.GOV.getProposalState(6);
@@ -104,17 +78,8 @@ contract EthRobotKeeperTest is Test {
     );
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
 
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0)
-    );
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
 
     IAaveGovernanceV2.ProposalState proposal6State = AaveGovernanceV2.GOV.getProposalState(6);
@@ -150,21 +115,13 @@ contract EthRobotKeeperTest is Test {
     );
 
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(5)
-    );
+
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
 
-    vm.startPrank(address(5));
-    aaveCLRobotOperator.toggleDisableAutomationById(address(ethRobotKeeper), 6);
+    vm.startPrank(ethRobotKeeper.owner());
+    ethRobotKeeper.toggleDisableAutomationById(6);
     vm.stopPrank();
 
     IAaveGovernanceV2.ProposalState proposal6State = AaveGovernanceV2.GOV.getProposalState(6);

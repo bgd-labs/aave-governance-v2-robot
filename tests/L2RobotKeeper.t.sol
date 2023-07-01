@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {Test} from 'forge-std/Test.sol';
 import {L2RobotKeeper} from '../src/contracts/L2RobotKeeper.sol';
 import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/IExecutorBase.sol';
-import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
 import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import 'forge-std/console.sol';
 
@@ -15,17 +14,8 @@ contract L2RobotKeeperTest is Test {
       39099833 // Feb-09-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR);
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(5)
-    );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor),
-      address(aaveCLRobotOperator)
+      address(bridgeExecutor)
     );
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(13);
@@ -48,17 +38,8 @@ contract L2RobotKeeperTest is Test {
       49297907 // Dec-28-2022
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR);
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(5)
-    );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor),
-      address(aaveCLRobotOperator)
+      address(bridgeExecutor)
     );
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(0);
@@ -78,17 +59,8 @@ contract L2RobotKeeperTest is Test {
       84422556 // May-10-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(5)
-    );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor),
-      address(aaveCLRobotOperator)
+      address(bridgeExecutor)
     );
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(9);
@@ -108,21 +80,12 @@ contract L2RobotKeeperTest is Test {
       84422556 // May-10-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
-    AaveCLRobotOperator aaveCLRobotOperator = new AaveCLRobotOperator(
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(0),
-      address(5)
-    );
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor),
-      address(aaveCLRobotOperator)
+      address(bridgeExecutor)
     );
 
-    vm.startPrank(address(5));
-    aaveCLRobotOperator.toggleDisableAutomationById(address(l2RobotKeeper), 9);
+    vm.startPrank(l2RobotKeeper.owner());
+    l2RobotKeeper.toggleDisableAutomationById(9);
     vm.stopPrank();
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(9);

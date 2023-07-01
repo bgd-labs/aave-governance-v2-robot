@@ -30,8 +30,7 @@ contract Deploy is Script {
       MAINTENANCE_ADMIN
     );
     keeper = new L2RobotKeeper(
-      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR,
-      address(aaveCLRobotOperator)
+      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR
     );
 
     // create proposal here and pass the keeper address and the link amount to fund

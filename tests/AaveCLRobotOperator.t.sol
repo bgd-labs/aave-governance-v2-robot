@@ -161,20 +161,6 @@ contract AaveCLRobotOperatorTest is Test {
     assertEq(aaveCLRobotOperator.getWithdrawAddress(), WITHDRAW_ADDRESS);
   }
 
-  function testDisableAutomationById(address upkeep, uint256 proposalId) public {
-    vm.startPrank(MAINTENANCE_ADMIN);
-    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), false);
-
-    aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
-
-    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), true);
-
-    aaveCLRobotOperator.toggleDisableAutomationById(upkeep, proposalId);
-
-    assertEq(aaveCLRobotOperator.isProposalDisabled(upkeep, proposalId), false);
-    vm.stopPrank();
-  }
-
   function testGetKeeperInfo() public {
     (uint256 id, address upkeep) = _registerKeeper();
     AaveCLRobotOperator.KeeperInfo memory keeperInfo = aaveCLRobotOperator.getKeeperInfo(upkeep);
@@ -190,8 +176,7 @@ contract AaveCLRobotOperatorTest is Test {
     vm.startPrank(FUNDS_ADMIN);
     LINK_TOKEN.approve(address(aaveCLRobotOperator), 100 ether);
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV),
-      address(aaveCLRobotOperator)
+      address(AaveGovernanceV2.GOV)
     );
     uint256 id = aaveCLRobotOperator.register(
       'testName',

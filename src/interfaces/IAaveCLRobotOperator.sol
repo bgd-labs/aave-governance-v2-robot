@@ -78,21 +78,6 @@ interface IAaveCLRobotOperator {
   function setMaintenanceAdmin(address maintenanceAdmin) external;
 
   /**
-   * @notice method called by funds admin/maintenance admin to disable/enabled automation on a specific proposalId for the given automation robot keeper.
-   * @param upkeep address of automation robot keeper.
-   * @param proposalId proposalId for which we need to disable/enable automation.
-   **/
-  function toggleDisableAutomationById(address upkeep, uint256 proposalId) external;
-
-  /**
-   * @notice method to check if automation for the proposalId for the given robot keeper is disabled/enabled.
-   * @param upkeep address of automation robot keeper.
-   * @param proposalId proposalId to check if automation is disabled or not.
-   * @return bool if automation for proposalId is disabled or not.
-   **/
-  function isProposalDisabled(address upkeep, uint256 proposalId) external view returns (bool);
-
-  /**
    * @notice method to get the funds admin for the robot operator contract.
    * @return address of the funds admin.
    **/

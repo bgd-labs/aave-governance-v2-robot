@@ -30,8 +30,7 @@ contract Deploy is Script {
     );
     // deploy the keeper
     keeper = new L2RobotKeeper(
-      AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR,
-      address(aaveCLRobotOperator)
+      AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR
     );
 
     // deploy the payload

@@ -29,7 +29,7 @@ contract Deploy is Script {
       MAINTENANCE_ADMIN
     );
     // deploy the keeper
-    keeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV), address(aaveCLRobotOperator));
+    keeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV));
 
     // deploy the payload
     payload = new ProposalPayloadEthereumRobot(
