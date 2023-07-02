@@ -5,6 +5,7 @@ import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
 import {IKeeperRegistrar} from '../interfaces/IKeeperRegistrar.sol';
 import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
+import {OwnableWithGuardian} from 'solidity-utils/contracts/access-control/OwnableWithGuardian.sol';
 
 /**
  * @title AaveCLRobotOperator
@@ -13,7 +14,7 @@ import {IKeeperRegistry} from '../interfaces/IKeeperRegistry.sol';
  *      The contract can register keepers, cancel it, withdraw excess link,
  *      configure the registered keepers and disable automation on a certain proposal.
  */
-contract AaveCLRobotOperator is IAaveCLRobotOperator {
+contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
   address public immutable LINK_TOKEN;
 
@@ -23,53 +24,29 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
   address public immutable KEEPER_REGISTRAR;
 
-  address internal _fundsAdmin;
-  address internal _maintenanceAdmin;
   address internal _linkWithdrawAddress;
 
   mapping(address upkeep => KeeperInfo) internal _keepers;
-
-  /**
-   * @dev Only funds admin can call functions marked by this modifier.
-   */
-  modifier onlyFundsAdmin() {
-    require(msg.sender == _fundsAdmin, 'CALLER_NOT_FUNDS_ADMIN');
-    _;
-  }
-
-  /**
-   * @dev Only maintenance admin or funds admin can call functions marked by this modifier.
-   */
-  modifier onlyMaintenanceOrFundsAdmin() {
-    require(
-      msg.sender == _maintenanceAdmin || msg.sender == _fundsAdmin,
-      'CALLER_NOT_MAINTENANCE_OR_FUNDS_ADMIN'
-    );
-    _;
-  }
 
   /**
    * @param linkTokenAddress address of the ERC-677 link token contract.
    * @param keeperRegistry address of the chainlink registry.
    * @param keeperRegistrar address of the chainlink registrar.
    * @param linkWithdrawAddress withdrawal address to send the exccess link after cancelling the keeper.
-   * @param fundsAdmin address of funds admin.
-   * @param maintenanceAdmin address of the maintenance admin.
+   * @param operatorOwner address to set as the owner of the operator contract.
    */
   constructor(
     address linkTokenAddress,
     address keeperRegistry,
     address keeperRegistrar,
     address linkWithdrawAddress,
-    address fundsAdmin,
-    address maintenanceAdmin
+    address operatorOwner
   ) {
     KEEPER_REGISTRY = keeperRegistry;
     KEEPER_REGISTRAR = keeperRegistrar;
     LINK_TOKEN = linkTokenAddress;
     _linkWithdrawAddress = linkWithdrawAddress;
-    _fundsAdmin = fundsAdmin;
-    _maintenanceAdmin = maintenanceAdmin;
+    _transferOwnership(operatorOwner);
   }
 
   /// @notice In order to fund the keeper we need to approve the Link token amount to this contract
@@ -79,7 +56,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
     address upkeepContract,
     uint32 gasLimit,
     uint96 amountToFund
-  ) external onlyFundsAdmin returns (uint256) {
+  ) external onlyOwner returns (uint256) {
     LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amountToFund);
     (IKeeperRegistry.State memory state, , ) = IKeeperRegistry(KEEPER_REGISTRY).getState();
     // nonce of the registry before the keeper has been registered
@@ -119,7 +96,7 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function cancel(address upkeep) external onlyFundsAdmin {
+  function cancel(address upkeep) external onlyOwner {
     IKeeperRegistry(KEEPER_REGISTRY).cancelUpkeep(_keepers[upkeep].id);
   }
 
@@ -137,33 +114,13 @@ contract AaveCLRobotOperator is IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function setGasLimit(address upkeep, uint32 gasLimit) external onlyMaintenanceOrFundsAdmin {
+  function setGasLimit(address upkeep, uint32 gasLimit) external onlyOwnerOrGuardian {
     IKeeperRegistry(KEEPER_REGISTRY).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function setWithdrawAddress(address withdrawAddress) external onlyFundsAdmin {
+  function setWithdrawAddress(address withdrawAddress) external onlyOwner {
     _linkWithdrawAddress = withdrawAddress;
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function setFundsAdmin(address fundsAdmin) external onlyFundsAdmin {
-    _fundsAdmin = fundsAdmin;
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function setMaintenanceAdmin(address maintenanceAdmin) external onlyMaintenanceOrFundsAdmin {
-    _maintenanceAdmin = maintenanceAdmin;
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function getFundsAdmin() external view returns (address) {
-    return _fundsAdmin;
-  }
-
-  /// @inheritdoc IAaveCLRobotOperator
-  function getMaintenanceAdmin() external view returns (address) {
-    return _maintenanceAdmin;
   }
 
   /// @inheritdoc IAaveCLRobotOperator

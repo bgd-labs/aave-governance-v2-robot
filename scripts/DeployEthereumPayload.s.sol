@@ -25,8 +25,7 @@ contract Deploy is Script {
       KEEPER_REGISTRY,
       KEEPER_REGISTRAR,
       address(AaveV3Ethereum.COLLECTOR),
-      AaveGovernanceV2.SHORT_EXECUTOR,
-      MAINTENANCE_ADMIN
+      AaveGovernanceV2.SHORT_EXECUTOR
     );
     // deploy the keeper
     keeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV));

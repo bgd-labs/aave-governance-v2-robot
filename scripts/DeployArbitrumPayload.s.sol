@@ -16,7 +16,6 @@ contract Deploy is Script {
   ProposalPayloadArbitrumRobot public payload;
   address constant KEEPER_REGISTRY = 0x75c0530885F385721fddA23C539AF3701d6183D4;
   address constant KEEPER_REGISTRAR = 0x4F3AF332A30973106Fe146Af0B4220bBBeA748eC;
-  address public constant MAINTENANCE_ADMIN = 0xe3FD707583932a99513a5c65c8463De769f5DAdF;
 
   function run() external {
     vm.startBroadcast();
@@ -26,8 +25,7 @@ contract Deploy is Script {
       KEEPER_REGISTRY,
       KEEPER_REGISTRAR,
       address(AaveV3Arbitrum.COLLECTOR),
-      AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR,
-      MAINTENANCE_ADMIN
+      AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR
     );
     // deploy the keeper
     keeper = new L2RobotKeeper(

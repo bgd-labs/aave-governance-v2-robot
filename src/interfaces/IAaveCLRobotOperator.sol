@@ -66,30 +66,6 @@ interface IAaveCLRobotOperator {
   function setWithdrawAddress(address withdrawAddress) external;
 
   /**
-   * @notice method called by funds admin to set the new funds admin.
-   * @param fundsAdmin address of new funds admin to set.
-   **/
-  function setFundsAdmin(address fundsAdmin) external;
-
-  /**
-   * @notice method called by either funds admin or maintenance admin to set the new maintenance admin.
-   * @param maintenanceAdmin address of new maintenance admin to set.
-   **/
-  function setMaintenanceAdmin(address maintenanceAdmin) external;
-
-  /**
-   * @notice method to get the funds admin for the robot operator contract.
-   * @return address of the funds admin.
-   **/
-  function getFundsAdmin() external view returns (address);
-
-  /**
-   * @notice method to get the maintenance admin for the robot operator contract.
-   * @return address of the maintenance admin.
-   **/
-  function getMaintenanceAdmin() external view returns (address);
-
-  /**
    * @notice method to get the withdraw address for the robot operator contract.
    * @return withdraw address to send excess link to.
    **/

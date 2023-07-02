@@ -15,7 +15,6 @@ contract Deploy is Script {
   AaveCLRobotOperator public aaveCLRobotOperator;
   address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
   address public constant KEEPER_REGISTRAR = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
-  address public constant MAINTENANCE_ADMIN = 0xe3FD707583932a99513a5c65c8463De769f5DAdF;
   address public constant ERC677_LINK = 0xb0897686c545045aFc77CF20eC7A532E3120E0F1;
 
   function run() external {
@@ -26,8 +25,7 @@ contract Deploy is Script {
       KEEPER_REGISTRY,
       KEEPER_REGISTRAR,
       address(AaveV3Polygon.COLLECTOR),
-      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR,
-      MAINTENANCE_ADMIN
+      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR
     );
     keeper = new L2RobotKeeper(
       AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR
