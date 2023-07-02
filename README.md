@@ -67,15 +67,15 @@ The keeper contracts are deployed and registered for ethereum and also for all L
 
 The contract to perform admin actions on the Aave Robot Keepers.
 
-<img width="1025" alt="Screenshot 2023-06-20 at 11 04 48 PM" src="https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/846605a4-2b57-401d-b1ff-727d0a7ceb3b">
+![Screenshot 2023-06-28 at 8 21 52 PM](https://github.com/bgd-labs/aave-governance-v2-robot/assets/22850280/ac2cc30f-101e-4355-9727-8a61077b8cfd)
 
 - `register()`
 
-  Called by the governance level 1 executor to register the Chainlink Keeper with the admin of the keeper as the operator contract.
+  Called by the governance level 1 executor (owner) to register the Chainlink Keeper with the admin of the keeper as the operator contract.
 
 - `cancel()`
 
-  Called by the governance level 1 executor to cancel the Chainlink Keeper.
+  Called by the governance level 1 executor (owner) to cancel the Chainlink Keeper.
 
 - `withdrawLink()`
 
@@ -83,7 +83,7 @@ The contract to perform admin actions on the Aave Robot Keepers.
 
 - `setGasLimit()`
 
-  Called by the governance level 1 executor to set the max gas limit for execution by the Chainlink Keeper.
+  Called by the governance level 1 executor (owner) / robot guardian to set the max gas limit for execution by the Chainlink Keeper.
 
 - `refillKeeper()`
 
@@ -91,11 +91,7 @@ The contract to perform admin actions on the Aave Robot Keepers.
 
 - `setWithdrawAddress()`
 
-  Called by the governance level 1 executor, to set the withdraw address which is initially set to the Aave Collector, which is used to receive link after canceling and withdrawing funds from the Chainlink Keeper.
-
-- `pause() / unpause()`
-
-  Called by the robot guardian to pause/unpause the Chainlink Keeper.
+  Called by the governance level 1 executor (owner), to set the withdraw address which is initially set to the Aave Collector, which is used to receive link after canceling and withdrawing funds from the Chainlink Keeper.
 
 # Deployment
 
