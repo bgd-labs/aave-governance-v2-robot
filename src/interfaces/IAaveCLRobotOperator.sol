@@ -8,6 +8,51 @@ pragma solidity ^0.8.0;
  **/
 interface IAaveCLRobotOperator {
   /**
+   * @dev Emitted when a keeper is registered using the operator contract.
+   * @param id id of the keeper registered.
+   * @param upkeep address of the keeper contract.
+   * @param amount amount of link the keeper has been registered with.
+   */
+  event KeeperRegistered(uint256 indexed id, address indexed upkeep, uint96 indexed amount);
+
+  /**
+   * @dev Emitted when a keeper is cancelled using the operator contract.
+   * @param id id of the keeper cancelled.
+   * @param upkeep address of the keeper contract.
+   */
+  event KeeperCancelled(uint256 indexed id, address indexed upkeep);
+
+  /**
+   * @dev Emitted when a keeper is already cancelled, and link is being withdrawn using the operator contract.
+   * @param id id of the keeper to withdraw link from.
+   * @param upkeep address of the keeper contract.
+   * @param to address where link needs to be withdrawn to.
+   */
+  event LinkWithdrawn(uint256 indexed id, address indexed upkeep, address indexed to);
+
+  /**
+   * @dev Emitted when a keeper is refilled using the operator contract.
+   * @param id id of the keeper which has been refilled.
+   * @param from address which refilled the keeper.
+   * @param amount amount of link which has been refilled for the keeper.
+   */
+  event KeeperRefilled(uint256 indexed id, address indexed from, uint96 indexed amount);
+
+  /**
+   * @dev Emitted when the link withdraw address has been changed of the keeper.
+   * @param newWithdrawAddress address of the new withdraw address where link will be withdrawn to.
+   */
+  event WithdrawAddressSet(address indexed newWithdrawAddress);
+
+  /**
+   * @dev Emitted when gas limit is configured using the operator contract.
+   * @param id id of the keeper which gas limit has been configured.
+   * @param upkeep address of the keeper contract.
+   * @param gasLimit max gas limit which has been configured for the keeper.
+   */
+  event GasLimitSet(uint256 indexed id, address indexed upkeep, uint32 indexed gasLimit);
+
+  /**
    * @notice holds the keeper info registered via the operator.
    * @param id chainlink id of the registered keeper.
    * @param name name of the registered keeper.

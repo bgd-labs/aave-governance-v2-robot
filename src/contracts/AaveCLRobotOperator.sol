@@ -89,6 +89,8 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
       );
       _keepers[upkeepContract].id = id;
       _keepers[upkeepContract].name = name;
+      emit KeeperRegistered(id, upkeepContract, amountToFund);
+
       return id;
     } else {
       revert('AUTO_APPROVE_DISABLED');
@@ -98,11 +100,13 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
   function cancel(address upkeep) external onlyOwner {
     IKeeperRegistry(KEEPER_REGISTRY).cancelUpkeep(_keepers[upkeep].id);
+    emit KeeperCancelled(_keepers[upkeep].id, upkeep);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
   function withdrawLink(address upkeep) external {
     IKeeperRegistry(KEEPER_REGISTRY).withdrawFunds(_keepers[upkeep].id, _linkWithdrawAddress);
+    emit LinkWithdrawn(_keepers[upkeep].id, upkeep, _linkWithdrawAddress);
   }
 
   /// @notice In order to refill the keeper we need to approve the Link token amount to this contract
@@ -111,16 +115,19 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
     LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amount);
     LinkTokenInterface(LINK_TOKEN).approve(KEEPER_REGISTRY, amount);
     IKeeperRegistry(KEEPER_REGISTRY).addFunds(_keepers[upkeep].id, amount);
+    emit KeeperRefilled(_keepers[upkeep].id, msg.sender, amount);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
   function setGasLimit(address upkeep, uint32 gasLimit) external onlyOwnerOrGuardian {
     IKeeperRegistry(KEEPER_REGISTRY).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
+    emit GasLimitSet(_keepers[upkeep].id, upkeep, gasLimit);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
   function setWithdrawAddress(address withdrawAddress) external onlyOwner {
     _linkWithdrawAddress = withdrawAddress;
+    emit WithdrawAddressSet(withdrawAddress);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
