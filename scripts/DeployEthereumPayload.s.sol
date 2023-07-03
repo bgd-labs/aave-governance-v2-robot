@@ -15,7 +15,6 @@ contract Deploy is Script {
   ProposalPayloadEthereumRobot public payload;
   address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
   address public constant KEEPER_REGISTRAR = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
-  address public constant MAINTENANCE_ADMIN = 0xe3FD707583932a99513a5c65c8463De769f5DAdF;
 
   function run() external {
     vm.startBroadcast();
