@@ -12,7 +12,7 @@ import {OwnableWithGuardian} from 'solidity-utils/contracts/access-control/Ownab
  * @author BGD Labs
  * @dev Operator contract to perform admin actions on the automation keepers.
  *      The contract can register keepers, cancel it, withdraw excess link,
- *      configure the registered keepers and disable automation on a certain proposal.
+ *      refill the keeper, configure the gasLimit.
  */
 contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
   /// @inheritdoc IAaveCLRobotOperator
@@ -26,7 +26,7 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
 
   address internal _linkWithdrawAddress;
 
-  mapping(address upkeep => KeeperInfo) internal _keepers;
+  mapping(uint256 id => KeeperInfo) internal _keepers;
 
   /**
    * @param linkTokenAddress address of the ERC-677 link token contract.
@@ -87,8 +87,8 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
       uint256 id = uint256(
         keccak256(abi.encodePacked(blockhash(block.number - 1), KEEPER_REGISTRY, uint32(oldNonce)))
       );
-      _keepers[upkeepContract].id = id;
-      _keepers[upkeepContract].name = name;
+      _keepers[id].upkeep = upkeepContract;
+      _keepers[id].name = name;
       emit KeeperRegistered(id, upkeepContract, amountToFund);
 
       return id;
@@ -98,30 +98,30 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function cancel(address upkeep) external onlyOwner {
-    IKeeperRegistry(KEEPER_REGISTRY).cancelUpkeep(_keepers[upkeep].id);
-    emit KeeperCancelled(_keepers[upkeep].id, upkeep);
+  function cancel(uint256 id) external onlyOwner {
+    IKeeperRegistry(KEEPER_REGISTRY).cancelUpkeep(id);
+    emit KeeperCancelled(id, _keepers[id].upkeep);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function withdrawLink(address upkeep) external {
-    IKeeperRegistry(KEEPER_REGISTRY).withdrawFunds(_keepers[upkeep].id, _linkWithdrawAddress);
-    emit LinkWithdrawn(_keepers[upkeep].id, upkeep, _linkWithdrawAddress);
+  function withdrawLink(uint256 id) external {
+    IKeeperRegistry(KEEPER_REGISTRY).withdrawFunds(id, _linkWithdrawAddress);
+    emit LinkWithdrawn(id, _keepers[id].upkeep, _linkWithdrawAddress);
   }
 
   /// @notice In order to refill the keeper we need to approve the Link token amount to this contract
   /// @inheritdoc IAaveCLRobotOperator
-  function refillKeeper(address upkeep, uint96 amount) external {
+  function refillKeeper(uint256 id, uint96 amount) external {
     LinkTokenInterface(LINK_TOKEN).transferFrom(msg.sender, address(this), amount);
     LinkTokenInterface(LINK_TOKEN).approve(KEEPER_REGISTRY, amount);
-    IKeeperRegistry(KEEPER_REGISTRY).addFunds(_keepers[upkeep].id, amount);
-    emit KeeperRefilled(_keepers[upkeep].id, msg.sender, amount);
+    IKeeperRegistry(KEEPER_REGISTRY).addFunds(id, amount);
+    emit KeeperRefilled(id, msg.sender, amount);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function setGasLimit(address upkeep, uint32 gasLimit) external onlyOwnerOrGuardian {
-    IKeeperRegistry(KEEPER_REGISTRY).setUpkeepGasLimit(_keepers[upkeep].id, gasLimit);
-    emit GasLimitSet(_keepers[upkeep].id, upkeep, gasLimit);
+  function setGasLimit(uint256 id, uint32 gasLimit) external onlyOwnerOrGuardian {
+    IKeeperRegistry(KEEPER_REGISTRY).setUpkeepGasLimit(id, gasLimit);
+    emit GasLimitSet(id, _keepers[id].upkeep, gasLimit);
   }
 
   /// @inheritdoc IAaveCLRobotOperator
@@ -136,7 +136,7 @@ contract AaveCLRobotOperator is OwnableWithGuardian, IAaveCLRobotOperator {
   }
 
   /// @inheritdoc IAaveCLRobotOperator
-  function getKeeperInfo(address upkeep) external view returns (KeeperInfo memory) {
-    return _keepers[upkeep];
+  function getKeeperInfo(uint256 id) external view returns (KeeperInfo memory) {
+    return _keepers[id];
   }
 }

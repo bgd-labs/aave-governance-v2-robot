@@ -54,16 +54,16 @@ interface IAaveCLRobotOperator {
 
   /**
    * @notice holds the keeper info registered via the operator.
-   * @param id chainlink id of the registered keeper.
+   * @param upkeep address of the keeper contract registered.
    * @param name name of the registered keeper.
    */
   struct KeeperInfo {
-    uint256 id;
+    address upkeep;
     string name;
   }
 
   /**
-   * @notice method called by funds admin to register the automation robot keeper.
+   * @notice method called by owner to register the automation robot keeper.
    * @param name - name of keeper.
    * @param upkeepContract - upkeepContract of the keeper.
    * @param gasLimit - max gasLimit which the chainlink automation node can execute for the automation.
@@ -79,33 +79,33 @@ interface IAaveCLRobotOperator {
 
   /**
    * @notice method called to refill the keeper.
-   * @param upkeep - address of the upkeep contract.
+   * @param id - id of the chainlink registered keeper to refill.
    * @param amount - amount of LINK to refill the keeper with.
    **/
-  function refillKeeper(address upkeep, uint96 amount) external;
+  function refillKeeper(uint256 id, uint96 amount) external;
 
   /**
-   * @notice method called by funds admin to cancel the automation robot keeper.
-   * @param upkeep address of the upkeep robot keeper contract to cancel.
+   * @notice method called by the owner to cancel the automation robot keeper.
+   * @param id - id of the chainlink registered keeper to cancel.
    **/
-  function cancel(address upkeep) external;
+  function cancel(uint256 id) external;
 
   /**
-   * @notice method called by funds admin to withdraw link of automation robot keeper to the withdraw address.
+   * @notice method called permissionlessly to withdraw link of automation robot keeper to the withdraw address.
    *         this method should only be called after the automation robot keeper is cancelled.
-   * @param upkeep address of the upkeep robot keeper contract to withdraw funds of.
+   * @param id - id of the chainlink registered keeper to withdraw funds of.
    **/
-  function withdrawLink(address upkeep) external;
+  function withdrawLink(uint256 id) external;
 
   /**
-   * @notice method called by funds admin/maintenance admin to set the max gasLimit of upkeep robot keeper.
-   * @param upkeep address of the upkeep robot keeper contract to set the gasLimit.
+   * @notice method called by owner / robot guardian to set the max gasLimit of upkeep robot keeper.
+   * @param id - id of the chainlink registered keeper to set the gasLimit.
    * @param gasLimit max gasLimit which the chainlink automation node can execute.
    **/
-  function setGasLimit(address upkeep, uint32 gasLimit) external;
+  function setGasLimit(uint256 id, uint32 gasLimit) external;
 
   /**
-   * @notice method called by funds admin to set the withdraw address when withdrawing excess link from the automation robot keeeper.
+   * @notice method called by owner to set the withdraw address when withdrawing excess link from the automation robot keeeper.
    * @param withdrawAddress withdraw address to withdaw link to.
    **/
   function setWithdrawAddress(address withdrawAddress) external;
@@ -118,12 +118,13 @@ interface IAaveCLRobotOperator {
 
   /**
    * @notice method to get the keeper information registered via the operator.
+   * @param id - id of the chainlink registered keeper.
    * @return Struct containing the following information about the keeper:
    *         - uint256 chainlink id of the registered keeper.
    *         - string name of the registered keeper.
    *         - address chainlink registry of the registered keeper.
    **/
-  function getKeeperInfo(address upkeep) external view returns (KeeperInfo memory);
+  function getKeeperInfo(uint256 id) external view returns (KeeperInfo memory);
 
   /**
    * @notice method to get the address of ERC-677 link token.

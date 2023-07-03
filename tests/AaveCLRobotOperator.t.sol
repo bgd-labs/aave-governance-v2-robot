@@ -52,13 +52,13 @@ contract AaveCLRobotOperatorTest is Test {
   }
 
   function testRefill() public {
-    (uint256 id, address upkeep) = _registerKeeper();
+    (uint256 id, ) = _registerKeeper();
     (, , , uint96 previousBalance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
     uint96 amountToFund = 10 ether;
 
     vm.startPrank(LINK_WHALE);
     LINK_TOKEN.approve(address(aaveCLRobotOperator), amountToFund);
-    aaveCLRobotOperator.refillKeeper(upkeep, amountToFund);
+    aaveCLRobotOperator.refillKeeper(id, amountToFund);
     vm.stopPrank();
 
     (, , , uint96 balance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
@@ -67,15 +67,15 @@ contract AaveCLRobotOperatorTest is Test {
 
   function testCancelAndWithdraw() public {
     assertEq(LINK_TOKEN.balanceOf(WITHDRAW_ADDRESS), 0);
-    (uint256 id, address upkeep) = _registerKeeper();
+    (uint256 id, ) = _registerKeeper();
 
     vm.startPrank(aaveCLRobotOperator.owner());
-    aaveCLRobotOperator.cancel(upkeep);
+    aaveCLRobotOperator.cancel(id);
     vm.stopPrank();
 
     vm.roll(block.number + 100);
 
-    aaveCLRobotOperator.withdrawLink(upkeep);
+    aaveCLRobotOperator.withdrawLink(id);
     (, , , uint96 balance, , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
 
     assertEq(balance, 0);
@@ -83,24 +83,24 @@ contract AaveCLRobotOperatorTest is Test {
   }
 
   function testCancel() public {
-    (, address upkeep) = _registerKeeper();
+    (uint256 id, ) = _registerKeeper();
 
     vm.startPrank(aaveCLRobotOperator.owner());
-    aaveCLRobotOperator.cancel(upkeep);
+    aaveCLRobotOperator.cancel(id);
     vm.stopPrank();
   }
 
   function testChangeGasLimit(uint32 gasLimit) public {
     vm.assume(gasLimit >= 10_000 && gasLimit <= 5_000_000);
-    (uint256 id, address upkeep) = _registerKeeper();
+    (uint256 id, ) = _registerKeeper();
 
     vm.startPrank(aaveCLRobotOperator.guardian());
-    aaveCLRobotOperator.setGasLimit(upkeep, gasLimit);
+    aaveCLRobotOperator.setGasLimit(id, gasLimit);
     vm.stopPrank();
 
     vm.startPrank(address(6));
     vm.expectRevert(bytes('ONLY_BY_OWNER_OR_GUARDIAN'));
-    aaveCLRobotOperator.setGasLimit(upkeep, gasLimit);
+    aaveCLRobotOperator.setGasLimit(id, gasLimit);
     vm.stopPrank();
 
     (, uint32 executeGas, , , , , , ) = IKeeperRegistry(REGISTRY).getUpkeep(id);
@@ -126,8 +126,8 @@ contract AaveCLRobotOperatorTest is Test {
 
   function testGetKeeperInfo() public {
     (uint256 id, address upkeep) = _registerKeeper();
-    AaveCLRobotOperator.KeeperInfo memory keeperInfo = aaveCLRobotOperator.getKeeperInfo(upkeep);
-    assertEq(keeperInfo.id, id);
+    AaveCLRobotOperator.KeeperInfo memory keeperInfo = aaveCLRobotOperator.getKeeperInfo(id);
+    assertEq(keeperInfo.upkeep, upkeep);
     assertEq(keeperInfo.name, 'testName');
   }
 
