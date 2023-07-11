@@ -14,9 +14,7 @@ contract L2RobotKeeperTest is Test {
       39099833 // Feb-09-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR);
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor)
-    );
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor));
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(13);
     assertEq(uint256(actionsSetState), 0);
@@ -38,9 +36,7 @@ contract L2RobotKeeperTest is Test {
       49297907 // Dec-28-2022
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR);
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor)
-    );
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor));
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(0);
     assertEq(uint256(actionsSetState), 0);
@@ -59,9 +55,7 @@ contract L2RobotKeeperTest is Test {
       84422556 // May-10-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor)
-    );
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor));
 
     IExecutorBase.ActionsSetState actionsSetState = bridgeExecutor.getCurrentState(9);
     assertEq(uint256(actionsSetState), 0);
@@ -80,9 +74,7 @@ contract L2RobotKeeperTest is Test {
       84422556 // May-10-2023
     );
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
-    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(
-      address(bridgeExecutor)
-    );
+    L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor));
 
     vm.startPrank(l2RobotKeeper.owner());
     l2RobotKeeper.toggleDisableAutomationById(9);

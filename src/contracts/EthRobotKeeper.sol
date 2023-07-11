@@ -116,28 +116,19 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
       if (
         action == ProposalAction.PerformCancel && _canProposalBeCancelled(proposalState, proposal)
       ) {
-        try IAaveGovernanceV2(GOVERNANCE_V2).cancel(proposalId) {
-          isActionPerformed = true;
-          emit ActionSucceeded(proposalId, action);
-        } catch Error(string memory reason) {
-          emit ActionFailed(proposalId, action, reason);
-        }
+        IAaveGovernanceV2(GOVERNANCE_V2).cancel(proposalId);
+        isActionPerformed = true;
+        emit ActionSucceeded(proposalId, action);
       } else if (action == ProposalAction.PerformQueue && _canProposalBeQueued(proposalState)) {
-        try IAaveGovernanceV2(GOVERNANCE_V2).queue(proposalId) {
-          isActionPerformed = true;
-          emit ActionSucceeded(proposalId, action);
-        } catch Error(string memory reason) {
-          emit ActionFailed(proposalId, action, reason);
-        }
+        IAaveGovernanceV2(GOVERNANCE_V2).queue(proposalId);
+        isActionPerformed = true;
+        emit ActionSucceeded(proposalId, action);
       } else if (
         action == ProposalAction.PerformExecute && _canProposalBeExecuted(proposalState, proposal)
       ) {
-        try IAaveGovernanceV2(GOVERNANCE_V2).execute(proposalId) {
-          isActionPerformed = true;
-          emit ActionSucceeded(proposalId, action);
-        } catch Error(string memory reason) {
-          emit ActionFailed(proposalId, action, reason);
-        }
+        IAaveGovernanceV2(GOVERNANCE_V2).execute(proposalId);
+        isActionPerformed = true;
+        emit ActionSucceeded(proposalId, action);
       }
     }
 
@@ -145,9 +136,7 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
   }
 
   /// @inheritdoc IEthRobotKeeper
-  function toggleDisableAutomationById(
-    uint256 proposalId
-  ) external onlyOwner {
+  function toggleDisableAutomationById(uint256 proposalId) external onlyOwner {
     _disabledProposals[proposalId] = !_disabledProposals[proposalId];
   }
 

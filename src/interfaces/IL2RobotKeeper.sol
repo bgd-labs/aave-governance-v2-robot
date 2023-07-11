@@ -10,14 +10,6 @@ import {AutomationCompatibleInterface} from 'chainlink-brownie-contracts/interfa
  */
 interface IL2RobotKeeper is AutomationCompatibleInterface {
   /**
-   * @dev Emitted when performUpkeep is called and no actions are executed.
-   * @param id actionsSetId of failed action.
-   * @param action action performed on the actionsSet which faled.
-   * @param reason reason of the failed action.
-   */
-  event ActionFailed(uint256 indexed id, ProposalAction indexed action, string reason);
-
-  /**
    * @dev Emitted when performUpkeep is called and actions are executed.
    * @param id actionsSetId id of successful action.
    * @param action successful action performed on the actionsSetId.

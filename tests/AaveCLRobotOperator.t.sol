@@ -138,9 +138,7 @@ contract AaveCLRobotOperatorTest is Test {
 
     vm.startPrank(AaveGovernanceV2.SHORT_EXECUTOR);
     LINK_TOKEN.approve(address(aaveCLRobotOperator), 100 ether);
-    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(
-      address(AaveGovernanceV2.GOV)
-    );
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV));
     uint256 id = aaveCLRobotOperator.register(
       'testName',
       address(ethRobotKeeper),

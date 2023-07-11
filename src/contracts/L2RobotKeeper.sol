@@ -93,12 +93,9 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
       uint256 actionsSetId = actionsSetIds[i - 1];
 
       if (_canActionSetBeExecuted(actionsSetId)) {
-        try IExecutorBase(BRIDGE_EXECUTOR).execute(actionsSetId) {
-          isActionPerformed = true;
-          emit ActionSucceeded(actionsSetId, ProposalAction.PerformExecute);
-        } catch Error(string memory reason) {
-          emit ActionFailed(actionsSetId, ProposalAction.PerformExecute, reason);
-        }
+        IExecutorBase(BRIDGE_EXECUTOR).execute(actionsSetId);
+        isActionPerformed = true;
+        emit ActionSucceeded(actionsSetId, ProposalAction.PerformExecute);
       }
     }
 
@@ -106,9 +103,7 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
   }
 
   /// @inheritdoc IL2RobotKeeper
-  function toggleDisableAutomationById(
-    uint256 actionsSetId
-  ) external onlyOwner {
+  function toggleDisableAutomationById(uint256 actionsSetId) external onlyOwner {
     _disabledActionsSets[actionsSetId] = !_disabledActionsSets[actionsSetId];
   }
 
