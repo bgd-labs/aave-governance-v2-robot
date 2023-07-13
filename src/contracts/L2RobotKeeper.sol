@@ -68,7 +68,10 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
 
     if (actionsCount > 0) {
       // we shuffle the actions list so that one action failing does not block the other actions of the keeper.
-      actionsSetIdsToPerformExecute = _squeezeAndShuffleActions(actionsSetIdsToPerformExecute, actionsCount);
+      actionsSetIdsToPerformExecute = _squeezeAndShuffleActions(
+        actionsSetIdsToPerformExecute,
+        actionsCount
+      );
 
       // squash and pick the first element from the shuffled array to perform execute.
       // we only perform one execute action due to gas limit limitation in one performUpkeep.

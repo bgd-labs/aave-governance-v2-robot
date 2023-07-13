@@ -202,7 +202,7 @@ contract EthRobotKeeperTest is Test {
       IAaveGovernanceV2.ProposalState.Queued
     );
 
-    vm.assume(n!=0 && n < 432000);
+    vm.assume(n != 0 && n < 432000);
     // we change the timestamp to be after timelock elapses and before grace period expiration
     // changing the timestamp will randomize the order of execution of actions.
     vm.warp(AaveGovernanceV2.GOV.getProposalById(proposalId).executionTime + n);
@@ -282,14 +282,16 @@ contract EthRobotKeeperTest is Test {
 
     uint256 totalProposalsQueued;
     for (uint256 i = proposalsCountBefore; i < proposalsCountAfter; i++) {
-      if (uint256(AaveGovernanceV2.GOV.getProposalState(i)) == uint256(IAaveGovernanceV2.ProposalState.Queued)) {
+      if (
+        uint256(AaveGovernanceV2.GOV.getProposalState(i)) ==
+        uint256(IAaveGovernanceV2.ProposalState.Queued)
+      ) {
         totalProposalsQueued++;
       }
     }
 
     // queue action is only performed on MAX_ACTIONS number of proposals
     assertEq(totalProposalsQueued, ethRobotKeeper.MAX_ACTIONS());
-
   }
 
   function checkAndPerformUpKeep(EthRobotKeeper ethRobotKeeper) private {

@@ -32,14 +32,26 @@ contract L2RobotKeeperTest is Test {
     IExecutorBase bridgeExecutor = IExecutorBase(AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR);
     L2RobotKeeper l2RobotKeeper = new L2RobotKeeper(address(bridgeExecutor));
 
-    assertEq(uint256(bridgeExecutor.getCurrentState(9)), uint256(IExecutorBase.ActionsSetState.Queued));
-    assertEq(uint256(bridgeExecutor.getCurrentState(10)), uint256(IExecutorBase.ActionsSetState.Queued));
+    assertEq(
+      uint256(bridgeExecutor.getCurrentState(9)),
+      uint256(IExecutorBase.ActionsSetState.Queued)
+    );
+    assertEq(
+      uint256(bridgeExecutor.getCurrentState(10)),
+      uint256(IExecutorBase.ActionsSetState.Queued)
+    );
 
     checkAndPerformUpKeep(l2RobotKeeper);
 
     // random execution depends on the blocknumber and timestamp so we know before that only actionSetId 9 is getting executed
-    assertEq(uint256(bridgeExecutor.getCurrentState(9)), uint256(IExecutorBase.ActionsSetState.Executed));
-    assertEq(uint256(bridgeExecutor.getCurrentState(10)), uint256(IExecutorBase.ActionsSetState.Queued));
+    assertEq(
+      uint256(bridgeExecutor.getCurrentState(9)),
+      uint256(IExecutorBase.ActionsSetState.Executed)
+    );
+    assertEq(
+      uint256(bridgeExecutor.getCurrentState(10)),
+      uint256(IExecutorBase.ActionsSetState.Queued)
+    );
   }
 
   function testExecuteArbitrum() public {
