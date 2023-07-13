@@ -58,8 +58,9 @@ interface IEthRobotKeeper is AutomationCompatibleInterface {
   function GOVERNANCE_V2() external returns (address);
 
   /**
-   * @notice method to get the maximum number of actions that can be performed by the keeper in one performUpkeep.
-   * @return max number of actions.
+   * @notice method to get the maximum number of queue and actions that can be performed by the keeper in one performUpkeep.
+   * This value is also used to determine the max size of execute actions array, which is used for randomization of execute action.
+   * @return max number of actions for queue / cancel. max size of execute actions array to be used for randomization for execute action.
    */
   function MAX_ACTIONS() external returns (uint256);
 

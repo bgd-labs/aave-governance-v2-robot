@@ -19,7 +19,7 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
   address public immutable BRIDGE_EXECUTOR;
 
   /// @inheritdoc IL2RobotKeeper
-  uint256 public constant MAX_ACTIONS = 25;
+  uint256 public constant MAX_ACTIONS = 5;
 
   /// @inheritdoc IL2RobotKeeper
   uint256 public constant MAX_SKIP = 20;
@@ -49,11 +49,11 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
     // loops from the last/latest actionsSetId until MAX_SKIP iterations. resets skipCount and checks more MAX_SKIP number
     // of actionsSet if they could be executed. we only check actionsSet until MAX_SKIP iterations from the last/latest actionsSet
     // or actionsSets where any action could be performed, and actionsSets before that will not be checked by the keeper.
-    while (index != 0 && skipCount <= MAX_SKIP && actionsCount <= MAX_ACTIONS) {
+    while (index != 0 && skipCount <= MAX_SKIP) {
       uint256 actionsSetId = index - 1;
 
       if (!isDisabled(actionsSetId)) {
-        if (_canActionSetBeExecuted(actionsSetId)) {
+        if (_canActionSetBeExecuted(actionsSetId) && actionsCount < MAX_ACTIONS) {
           skipCount = 0;
           actionsSetIdsToPerformExecute[actionsCount] = actionsSetId;
           actionsCount++;
@@ -67,10 +67,11 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
     }
 
     if (actionsCount > 0) {
-      // we do not know the length in advance, so we init arrays with the maxNumberOfActions
-      // and then squeeze the array using mstore
+      actionsSetIdsToPerformExecute = _squeezeAndShuffleActions(actionsSetIdsToPerformExecute, actionsCount);
+      // squash and pick the first element from the shuffled array to perform execute.
+      // we only perform one execute action due to gas limit limitation in one performUpkeep.
       assembly {
-        mstore(actionsSetIdsToPerformExecute, actionsCount)
+        mstore(actionsSetIdsToPerformExecute, 1)
       }
       bytes memory performData = abi.encode(actionsSetIdsToPerformExecute);
       return (true, performData);
@@ -132,5 +133,29 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
       return true;
     }
     return false;
+  }
+
+  function _squeezeAndShuffleActions(
+    uint256[] memory actions,
+    uint256 actionsCount
+  ) internal view returns (uint256[] memory) {
+    // we do not know the length in advance, so we init arrays with MAX_ACTIONS
+    // and then squeeze the array using mstore
+    assembly {
+      mstore(actions, actionsCount)
+    }
+
+    // shuffle actions
+    for (uint256 i = 0; i < actions.length; i++) {
+      uint256 randomNumber = uint256(
+        keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp))
+      );
+      uint256 n = i + (randomNumber % (actions.length - i));
+      uint256 temp = actions[n];
+      actions[n] = actions[i];
+      actions[i] = temp;
+    }
+
+    return actions;
   }
 }

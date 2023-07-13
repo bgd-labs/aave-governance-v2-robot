@@ -19,7 +19,7 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
   address public immutable GOVERNANCE_V2;
 
   /// @inheritdoc IEthRobotKeeper
-  uint256 public constant MAX_ACTIONS = 25;
+  uint256 public constant MAX_ACTIONS = 5;
 
   /// @inheritdoc IEthRobotKeeper
   uint256 public constant MAX_SKIP = 20;
@@ -40,16 +40,18 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
    * @dev run off-chain, checks if proposals should be moved to queued, executed or cancelled state
    */
   function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
-    ActionWithId[] memory actionsWithIds = new ActionWithId[](MAX_ACTIONS);
+    ActionWithId[] memory queueAndCancelActions = new ActionWithId[](MAX_ACTIONS);
+    ActionWithId[] memory executeActions = new ActionWithId[](MAX_ACTIONS);
 
     uint256 index = IAaveGovernanceV2(GOVERNANCE_V2).getProposalsCount();
     uint256 skipCount = 0;
-    uint256 actionsCount = 0;
+    uint256 queueAndCancelCount = 0;
+    uint256 executeCount = 0;
 
     // loops from the last/latest proposalId until MAX_SKIP iterations. resets skipCount and checks more MAX_SKIP number
     // of proposals if any action could be performed. we only check proposals until MAX_SKIP iterations from the last/latest
     // proposalId or proposals where any action could be performed, and proposals before that will be not be checked by the keeper.
-    while (index != 0 && skipCount <= MAX_SKIP && actionsCount < MAX_ACTIONS) {
+    while (index != 0 && skipCount <= MAX_SKIP) {
       uint256 proposalId = index - 1;
 
       IAaveGovernanceV2.ProposalState proposalState = IAaveGovernanceV2(GOVERNANCE_V2)
@@ -61,18 +63,22 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
         if (_isProposalInFinalState(proposalState)) {
           skipCount++;
         } else {
-          if (_canProposalBeCancelled(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = proposalId;
-            actionsWithIds[actionsCount].action = ProposalAction.PerformCancel;
-            actionsCount++;
-          } else if (_canProposalBeQueued(proposalState)) {
-            actionsWithIds[actionsCount].id = proposalId;
-            actionsWithIds[actionsCount].action = ProposalAction.PerformQueue;
-            actionsCount++;
-          } else if (_canProposalBeExecuted(proposalState, proposal)) {
-            actionsWithIds[actionsCount].id = proposalId;
-            actionsWithIds[actionsCount].action = ProposalAction.PerformExecute;
-            actionsCount++;
+          if (
+            _canProposalBeCancelled(proposalState, proposal) && queueAndCancelCount < MAX_ACTIONS
+          ) {
+            queueAndCancelActions[queueAndCancelCount].id = proposalId;
+            queueAndCancelActions[queueAndCancelCount].action = ProposalAction.PerformCancel;
+            queueAndCancelCount++;
+          } else if (_canProposalBeQueued(proposalState) && queueAndCancelCount < MAX_ACTIONS) {
+            queueAndCancelActions[queueAndCancelCount].id = proposalId;
+            queueAndCancelActions[queueAndCancelCount].action = ProposalAction.PerformQueue;
+            queueAndCancelCount++;
+          } else if (
+            _canProposalBeExecuted(proposalState, proposal) && executeCount < MAX_ACTIONS
+          ) {
+            executeActions[executeCount].id = proposalId;
+            executeActions[executeCount].action = ProposalAction.PerformExecute;
+            executeCount++;
           }
           skipCount = 0;
         }
@@ -81,14 +87,17 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
       index--;
     }
 
-    if (actionsCount > 0) {
-      // we do not know the length in advance, so we init arrays with MAX_ACTIONS
-      // and then squeeze the array using mstore
+    if (queueAndCancelCount > 0) {
+      queueAndCancelActions = _squeezeAndShuffleActions(queueAndCancelActions, queueAndCancelCount);
+      return (true, abi.encode(queueAndCancelActions));
+    } else if (executeCount > 0) {
+      executeActions = _squeezeAndShuffleActions(executeActions, executeCount);
+      // squash and pick the first element from the shuffled array to perform execute.
+      // we only perform one execute action due to gas limit limitation in one performUpkeep.
       assembly {
-        mstore(actionsWithIds, actionsCount)
+        mstore(executeActions, 1)
       }
-      bytes memory performData = abi.encode(actionsWithIds);
-      return (true, performData);
+      return (true, abi.encode(executeActions));
     }
 
     return (false, '');
@@ -218,5 +227,29 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
         proposal.creator,
         block.number - 1
       );
+  }
+
+  function _squeezeAndShuffleActions(
+    ActionWithId[] memory actions,
+    uint256 actionsCount
+  ) internal view returns (ActionWithId[] memory) {
+    // we do not know the length in advance, so we init arrays with MAX_ACTIONS
+    // and then squeeze the array using mstore
+    assembly {
+      mstore(actions, actionsCount)
+    }
+
+    // shuffle actions
+    for (uint256 i = 0; i < actions.length; i++) {
+      uint256 randomNumber = uint256(
+        keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp))
+      );
+      uint256 n = i + (randomNumber % (actions.length - i));
+      ActionWithId memory temp = actions[n];
+      actions[n] = actions[i];
+      actions[i] = temp;
+    }
+
+    return actions;
   }
 }

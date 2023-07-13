@@ -54,8 +54,9 @@ interface IL2RobotKeeper is AutomationCompatibleInterface {
   function BRIDGE_EXECUTOR() external returns (address);
 
   /**
-   * @notice method to get the maximum number of actions that can be performed by the keeper in one performUpkeep.
-   * @return max number of actions.
+   * @notice method to get the max size of actions array, which is used for randomization of action execution.
+   * also note that the maximum number of execute actions in one performUpkeep is always one.
+   * @return max size of execute actions array to be used for randomization.
    */
   function MAX_ACTIONS() external returns (uint256);
 
