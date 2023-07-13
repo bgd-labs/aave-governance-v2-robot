@@ -54,6 +54,8 @@ The keeper contracts are deployed and registered for ethereum and also for all L
   If any proposal / actionsSetId is disabled by the Aave CL Robot Operator, it skips it.
   In case any actions could be performed it stores them in an array of struct `ActionWithId[]` which contain the id of proposal/actionsSet and the action to perform and returns true with the `ActionWithId[]` encoded in params.
 
+  Note: For `execute()` actions we do not batch with any other actions them due to gas limit limitations, and we only execute them one at a time in a randomized way so that one 'execute()' action failing does not block the other `execute()` actions.
+
 - `performUpKeep()`
 
   This is called when `checkUpKeep()` returns true with the params containing ids and actions to perform.
