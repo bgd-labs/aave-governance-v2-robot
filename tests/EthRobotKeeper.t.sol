@@ -234,7 +234,6 @@ contract EthRobotKeeperTest is Test {
     );
 
     GovernanceHelpers governanceHelpers = new GovernanceHelpers();
-
     EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV));
 
     vm.startPrank(ethRobotKeeper.owner());
@@ -258,6 +257,39 @@ contract EthRobotKeeperTest is Test {
 
     proposal12State = AaveGovernanceV2.GOV.getProposalState(12);
     assertEq(uint256(proposal12State), uint256(IAaveGovernanceV2.ProposalState.Queued));
+  }
+
+  function testMaxActions() public {
+    vm.createSelectFork(
+      'mainnet',
+      11824716 // Feb-09-2021
+    );
+
+    GovernanceHelpers governanceHelpers = new GovernanceHelpers();
+    EthRobotKeeper ethRobotKeeper = new EthRobotKeeper(address(AaveGovernanceV2.GOV));
+
+    // create max actions + 10 proposals which can be queued
+    uint256 numberOfProposalsToCreate = ethRobotKeeper.MAX_ACTIONS() + 10;
+    uint256 proposalsCountBefore = AaveGovernanceV2.GOV.getProposalsCount();
+
+    for (uint256 i = 0; i < numberOfProposalsToCreate; i++) {
+      vm.roll(block.number + 1);
+      governanceHelpers.createDummyProposal(vm, IAaveGovernanceV2.ProposalState.Succeeded);
+    }
+    uint256 proposalsCountAfter = AaveGovernanceV2.GOV.getProposalsCount();
+
+    checkAndPerformUpKeep(ethRobotKeeper);
+
+    uint256 totalProposalsQueued;
+    for (uint256 i = proposalsCountBefore; i < proposalsCountAfter; i++) {
+      if (uint256(AaveGovernanceV2.GOV.getProposalState(i)) == uint256(IAaveGovernanceV2.ProposalState.Queued)) {
+        totalProposalsQueued++;
+      }
+    }
+
+    // queue action is only performed on MAX_ACTIONS number of proposals
+    assertEq(totalProposalsQueued, ethRobotKeeper.MAX_ACTIONS());
+
   }
 
   function checkAndPerformUpKeep(EthRobotKeeper ethRobotKeeper) private {
