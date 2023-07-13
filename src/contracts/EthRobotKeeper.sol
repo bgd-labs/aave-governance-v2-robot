@@ -114,7 +114,7 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
     ActionWithId[] memory actionsWithIds = abi.decode(performData, (ActionWithId[]));
     bool isActionPerformed;
 
-    // executes action on proposalIds in order from first to last
+    // executes action on proposalIds
     for (uint256 i = actionsWithIds.length; i > 0; i--) {
       uint256 proposalId = actionsWithIds[i - 1].id;
       ProposalAction action = actionsWithIds[i - 1].action;

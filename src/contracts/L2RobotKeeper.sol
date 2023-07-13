@@ -94,7 +94,7 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
     uint256[] memory actionsSetIds = abi.decode(performData, (uint256[]));
     bool isActionPerformed;
 
-    // executes action on actionSetIds in order from first to last
+    // executes action on actionSetIds
     for (uint i = actionsSetIds.length; i > 0; i--) {
       uint256 actionsSetId = actionsSetIds[i - 1];
 
