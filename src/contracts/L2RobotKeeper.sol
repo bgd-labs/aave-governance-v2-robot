@@ -67,7 +67,9 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
     }
 
     if (actionsCount > 0) {
+      // we shuffle the actions list so that one action failing does not block the other actions of the keeper.
       actionsSetIdsToPerformExecute = _squeezeAndShuffleActions(actionsSetIdsToPerformExecute, actionsCount);
+
       // squash and pick the first element from the shuffled array to perform execute.
       // we only perform one execute action due to gas limit limitation in one performUpkeep.
       assembly {
@@ -135,6 +137,12 @@ contract L2RobotKeeper is Ownable, IL2RobotKeeper {
     return false;
   }
 
+  /**
+   * @notice method to squeeze the actions array to the right size and shuffle them.
+   * @param actions the list of actions to squeeze and shuffle.
+   * @param actionsCount the total count of actions - used to squeeze the array to the right size.
+   * @return actions array squeezed and shuffled.
+   */
   function _squeezeAndShuffleActions(
     uint256[] memory actions,
     uint256 actionsCount

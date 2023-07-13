@@ -88,9 +88,11 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
     }
 
     if (queueAndCancelCount > 0) {
+      // we batch multiple queue and cancel actions together so that we can perform the actions in a single performUpkeep.
       queueAndCancelActions = _squeezeAndShuffleActions(queueAndCancelActions, queueAndCancelCount);
       return (true, abi.encode(queueAndCancelActions));
     } else if (executeCount > 0) {
+      // we also shuffle the actions list so that one action failing does not block the other actions of the keeper.
       executeActions = _squeezeAndShuffleActions(executeActions, executeCount);
       // squash and pick the first element from the shuffled array to perform execute.
       // we only perform one execute action due to gas limit limitation in one performUpkeep.
@@ -229,6 +231,12 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
       );
   }
 
+  /**
+   * @notice method to squeeze the actions array to the right size and shuffle them.
+   * @param actions the list of actions to squeeze and shuffle.
+   * @param actionsCount the total count of actions - used to squeeze the array to the right size.
+   * @return actions array squeezed and shuffled.
+   */
   function _squeezeAndShuffleActions(
     ActionWithId[] memory actions,
     uint256 actionsCount
