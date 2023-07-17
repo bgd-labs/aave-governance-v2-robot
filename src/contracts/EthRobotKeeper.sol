@@ -89,10 +89,12 @@ contract EthRobotKeeper is Ownable, IEthRobotKeeper {
 
     if (queueAndCancelCount > 0) {
       // we batch multiple queue and cancel actions together so that we can perform the actions in a single performUpkeep.
-      queueAndCancelActions = _squeezeAndShuffleActions(queueAndCancelActions, queueAndCancelCount);
+      assembly {
+        mstore(queueAndCancelActions, queueAndCancelCount)
+      }
       return (true, abi.encode(queueAndCancelActions));
     } else if (executeCount > 0) {
-      // we also shuffle the actions list so that one action failing does not block the other actions of the keeper.
+      // we shuffle the actions list so that one action failing does not block the other actions of the keeper.
       executeActions = _squeezeAndShuffleActions(executeActions, executeCount);
       // squash and pick the first element from the shuffled array to perform execute.
       // we only perform one execute action due to gas limit limitation in one performUpkeep.
