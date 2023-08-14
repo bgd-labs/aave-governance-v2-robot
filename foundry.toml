@@ -5,12 +5,13 @@ script = 'scripts'
 out = 'out'
 libs = ['lib']
 remappings = [
-    'chainlink-brownie-contracts/=lib/chainlink-brownie-contracts/contracts/src/v0.8/',
-    'aave-address-book/=lib/aave-address-book/src/',
-    'aave-helpers/=lib/aave-helpers/src/',
-    'solidity-utils/=lib/solidity-utils/src/',
+  'chainlink-brownie-contracts/=lib/chainlink-brownie-contracts/contracts/src/v0.8/',
+  'aave-address-book/=lib/aave-address-book/src/',
+  'aave-helpers/=lib/aave-helpers/src/',
+  'solidity-utils/=lib/solidity-utils/src/',
 ]
 fs_permissions = [{access = "write", path = "./reports"}]
+solc='0.8.18'
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
@@ -28,5 +29,8 @@ avalanche={key="${ETHERSCAN_API_KEY_AVALANCHE}",chainId=43114}
 polygon={key="${ETHERSCAN_API_KEY_POLYGON}",chainId=137}
 arbitrum={key="${ETHERSCAN_API_KEY_ARBITRUM}",chainId=42161}
 fantom={key="${ETHERSCAN_API_KEY_FANTOM}",chainId=250}
+
+[fuzz]
+runs=500
 
 # See more config options https://github.com/gakonst/foundry/tree/master/config

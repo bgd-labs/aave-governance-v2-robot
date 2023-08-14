@@ -18,7 +18,8 @@ contract GovernanceHelpers {
     bool[] memory withDelegatecalls = new bool[](1);
 
     targets[0] = address(1);
-    signatures[0] = '';
+    // to create unique proposals we randomize the signature with block number
+    signatures[0] = string(abi.encode(block.number));
     calldatas[0] = '';
     values[0] = 0;
     withDelegatecalls[0] = false;
@@ -37,7 +38,6 @@ contract GovernanceHelpers {
 
     if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       GovHelpers.passVote(vm, proposalId);
-      proposalState = AaveGovernanceV2.GOV.getProposalState(proposalId);
     } else if (proposalState == IAaveGovernanceV2.ProposalState.Queued) {
       GovHelpers.passVoteAndQueue(vm, proposalId);
     } else if (proposalState == IAaveGovernanceV2.ProposalState.Executed) {
