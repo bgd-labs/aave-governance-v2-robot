@@ -11,30 +11,18 @@ contract GovernanceHelpers {
     Vm vm,
     IAaveGovernanceV2.ProposalState proposalState
   ) external returns (uint256) {
-    address[] memory targets = new address[](1);
-    uint256[] memory values = new uint256[](1);
-    string[] memory signatures = new string[](1);
-    bytes[] memory calldatas = new bytes[](1);
-    bool[] memory withDelegatecalls = new bool[](1);
 
-    targets[0] = address(1);
-    // to create unique proposals we randomize the signature with block number
-    signatures[0] = string(abi.encode(block.number));
-    calldatas[0] = '';
-    values[0] = 0;
-    withDelegatecalls[0] = false;
+    GovHelpers.Payload[] memory payloads = new GovHelpers.Payload[](1);
+      payloads[0] = GovHelpers.Payload({
+        target: address(1),
+        // to create unique proposals we randomize the signature with block number
+        signature: string(abi.encode(block.number)),
+        callData: '',
+        withDelegatecall: true,
+        value: 0
+      });
 
-    GovHelpers.SPropCreateParams memory createParams = GovHelpers.SPropCreateParams(
-      AaveGovernanceV2.SHORT_EXECUTOR,
-      targets,
-      values,
-      signatures,
-      calldatas,
-      withDelegatecalls,
-      bytes32('ipfs')
-    );
-
-    uint256 proposalId = GovHelpers.createTestProposal(vm, createParams);
+    uint256 proposalId = GovHelpers.createTestProposal(vm, payloads, AaveGovernanceV2.SHORT_EXECUTOR);
 
     if (proposalState == IAaveGovernanceV2.ProposalState.Succeeded) {
       GovHelpers.passVote(vm, proposalId);

@@ -1,45 +1,40 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
-import {AaveCLRobotOperator} from '../contracts/AaveCLRobotOperator.sol';
+import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 import {AaveV3Optimism, AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
-import {LinkTokenInterface} from 'chainlink-brownie-contracts/interfaces/LinkTokenInterface.sol';
+import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
+import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
 
 /**
  * @title ProposalPayloadOptimismRobot
  * @author BGD Labs
- * @dev Proposal to register Chainlink Keeper for optimism bridge executor
- * - Transfer aLink tokens from AAVE Collector to the current address
- * - Withdraw aLink to get Link token to the operator address
- * - Register the Chainlink Keeper for optimism bridge executor via the operator contract
+ * @dev Proposal to fund Chainlink Keeper for Optimism Bridge Executor Automation (gov v2)
+ * - Transfer aLink tokens from AAVE Collector to the bridge executor
+ * - Withdraw aLink to get link token from the Aave v3 Pool
+ * - Refill the Chainlink Keeper with link via the operator contract
  */
 contract ProposalPayloadOptimismRobot {
-  address public immutable OPTIMISM_ROBOT_KEEPER_ADDRESS;
-  address public immutable OPTIMISM_ROBOT_OPERATOR;
-  uint256 public immutable LINK_AMOUNT;
+  using SafeERC20 for IERC20;
 
-  /**
-   * @dev emitted when the new upkeep is registered in Chainlink
-   * @param name name of the upkeep
-   * @param upkeepId id of the upkeep in chainlink
-   */
-  event ChainlinkUpkeepRegistered(string indexed name, uint256 indexed upkeepId);
+  address public immutable ROBOT_OPERATOR;
+  uint256 public immutable LINK_AMOUNT;
+  uint256 public immutable KEEPER_ID;
 
   /**
    * @dev constructor of the proposal
-   * @param keeperAddress the address of the chainlink keeper
+   * @param keeperId the chainlink id of the pre-registered keeper.
    * @param robotOperator the address of the aave chainlink robot operator
    * @param amountToFund the amount of link tokens to fund the keeper
    */
-  constructor(address keeperAddress, address robotOperator, uint256 amountToFund) {
-    OPTIMISM_ROBOT_KEEPER_ADDRESS = keeperAddress;
-    OPTIMISM_ROBOT_OPERATOR = robotOperator;
+  constructor(uint256 keeperId, address robotOperator, uint256 amountToFund) {
+    KEEPER_ID = keeperId;
+    ROBOT_OPERATOR = robotOperator;
     LINK_AMOUNT = amountToFund;
   }
 
   function execute() external {
-    // transfer aLink from collector to this address
+    // transfer aLink from collector to the bridge executor
     AaveV3Optimism.COLLECTOR.transfer(
       AaveV3OptimismAssets.LINK_A_TOKEN,
       address(this),
@@ -49,20 +44,17 @@ contract ProposalPayloadOptimismRobot {
     // withdraw aLink from the Aave V3 Pool
     AaveV3Optimism.POOL.withdraw(AaveV3OptimismAssets.LINK_UNDERLYING, LINK_AMOUNT, address(this));
 
-    // approve Link to the operator in order to register
-    LinkTokenInterface(AaveV3OptimismAssets.LINK_UNDERLYING).approve(
-      OPTIMISM_ROBOT_OPERATOR,
+    // approve link to the operator in order to refill the keeper
+    IERC20(AaveV3OptimismAssets.LINK_UNDERLYING).forceApprove(
+      ROBOT_OPERATOR,
       LINK_AMOUNT
     );
 
-    // register the keeper via the operator
-    uint256 id = AaveCLRobotOperator(OPTIMISM_ROBOT_OPERATOR).register(
-      'AaveOptRobotKeeperV2',
-      OPTIMISM_ROBOT_KEEPER_ADDRESS,
-      5_000_000,
+    // refills the keeper with link
+    IAaveCLRobotOperator(ROBOT_OPERATOR).refillKeeper(
+      KEEPER_ID,
       safeToUint96(LINK_AMOUNT)
     );
-    emit ChainlinkUpkeepRegistered('AaveOptRobotKeeperV2', id);
   }
 
   function safeToUint96(uint256 value) internal pure returns (uint96) {

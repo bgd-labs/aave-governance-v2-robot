@@ -3,43 +3,24 @@ pragma solidity ^0.8.0;
 
 import {Script} from 'forge-std/Script.sol';
 import {console} from 'forge-std/console.sol';
-import {L2RobotKeeper} from '../src/contracts/L2RobotKeeper.sol';
-import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
 import {ProposalPayloadPolygonRobot} from '../src/proposal/ProposalPayloadPolygonRobot.sol';
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {AaveV3Polygon, AaveV3PolygonAssets} from 'aave-address-book/AaveV3Polygon.sol';
 
 contract Deploy is Script {
   ProposalPayloadPolygonRobot public proposal;
-  L2RobotKeeper public keeper;
-  AaveCLRobotOperator public aaveCLRobotOperator;
-  address public constant KEEPER_REGISTRY = 0x02777053d6764996e594c3E88AF1D58D5363a2e6;
-  address public constant KEEPER_REGISTRAR = 0xDb8e8e2ccb5C033938736aa89Fe4fa1eDfD15a1d;
-  address public constant ERC677_LINK = 0xb0897686c545045aFc77CF20eC7A532E3120E0F1;
+
+  address public constant ETHEREUM_ROBOT_OPERATOR = 0x4e8984D11A47Ff89CD67c7651eCaB6C00a74B4A9;
+  uint256 public constant KEEPER_ID = 5270433258472149004463739312507691937285233476849983113005055156517680660709;
+  uint256 public constant AMOUNT_TO_FUND = 25 ether;
 
   function run() external {
     vm.startBroadcast();
-    // deploy the robot operator
-    aaveCLRobotOperator = new AaveCLRobotOperator(
-      ERC677_LINK,
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR,
-      address(AaveV3Polygon.COLLECTOR),
-      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR
-    );
-    keeper = new L2RobotKeeper(
-      AaveGovernanceV2.POLYGON_BRIDGE_EXECUTOR
-    );
 
-    // create proposal here and pass the keeper address and the link amount to fund
     proposal = new ProposalPayloadPolygonRobot(
-      address(keeper),
-      address(aaveCLRobotOperator),
-      30 ether
+      KEEPER_ID,
+      ETHEREUM_ROBOT_OPERATOR,
+      AMOUNT_TO_FUND
     );
 
-    console.log('Polygon keeper address', address(keeper));
-    console.log('Polygon operator address', address(aaveCLRobotOperator));
     console.log('Polygon payload address', address(proposal));
     vm.stopBroadcast();
   }

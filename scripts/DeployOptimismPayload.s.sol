@@ -3,43 +3,24 @@ pragma solidity ^0.8.0;
 
 import {Script} from 'forge-std/Script.sol';
 import {console} from 'forge-std/console.sol';
-import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
 import {ProposalPayloadOptimismRobot} from '../src/proposal/ProposalPayloadOptimismRobot.sol';
-import {L2RobotKeeper} from '../src/contracts/L2RobotKeeper.sol';
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {AaveV3Optimism, AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
 
 contract Deploy is Script {
-  L2RobotKeeper public keeper;
-  AaveCLRobotOperator public aaveCLRobotOperator;
   ProposalPayloadOptimismRobot public payload;
-  address public constant KEEPER_REGISTRY = 0x75c0530885F385721fddA23C539AF3701d6183D4;
-  address public constant KEEPER_REGISTRAR = 0x4F3AF332A30973106Fe146Af0B4220bBBeA748eC;
+
+  address public constant ETHEREUM_ROBOT_OPERATOR = 0x4f830bc2DdaC99307a3709c85F7533842BdA7c63;
+  uint256 public constant KEEPER_ID = 14511291151503490097406614071718050938575520605993697066624566563051111599185;
+  uint256 public constant AMOUNT_TO_FUND = 25 ether;
 
   function run() external {
     vm.startBroadcast();
-    // deploy the robot operator
-    aaveCLRobotOperator = new AaveCLRobotOperator(
-      AaveV3OptimismAssets.LINK_UNDERLYING,
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR,
-      address(AaveV3Optimism.COLLECTOR),
-      AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR
-    );
-    // deploy the keeper
-    keeper = new L2RobotKeeper(
-      AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR
-    );
 
-    // deploy the payload
     payload = new ProposalPayloadOptimismRobot(
-      address(keeper),
-      address(aaveCLRobotOperator),
-      50 ether
+      KEEPER_ID,
+      ETHEREUM_ROBOT_OPERATOR,
+      AMOUNT_TO_FUND
     );
 
-    console.log('Optimism keeper address', address(keeper));
-    console.log('Optimism operator address', address(aaveCLRobotOperator));
     console.log('Optimism payload address', address(payload));
     vm.stopBroadcast();
   }
