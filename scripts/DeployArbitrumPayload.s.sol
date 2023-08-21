@@ -3,44 +3,22 @@ pragma solidity ^0.8.0;
 
 import {Script} from 'forge-std/Script.sol';
 import {console} from 'forge-std/console.sol';
-import {AaveCLRobotOperator} from '../src/contracts/AaveCLRobotOperator.sol';
 import {ProposalPayloadArbitrumRobot} from '../src/proposal/ProposalPayloadArbitrumRobot.sol';
-import {L2RobotKeeper} from '../src/contracts/L2RobotKeeper.sol';
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
-import {IExecutorBase} from 'governance-crosschain-bridges/contracts/interfaces/IExecutorBase.sol';
-import {AaveV3Arbitrum, AaveV3ArbitrumAssets} from 'aave-address-book/AaveV3Arbitrum.sol';
 
 contract Deploy is Script {
-  L2RobotKeeper public keeper;
-  AaveCLRobotOperator public aaveCLRobotOperator;
   ProposalPayloadArbitrumRobot public payload;
-  address constant KEEPER_REGISTRY = 0x75c0530885F385721fddA23C539AF3701d6183D4;
-  address constant KEEPER_REGISTRAR = 0x4F3AF332A30973106Fe146Af0B4220bBBeA748eC;
+
+  address public constant ARBITRUM_ROBOT_OPERATOR = 0xb0A73671C97BAC9Ba899CD1a23604Fd2278cD02A;
+  uint256 public constant KEEPER_ID = 99910557623747840434738249049159754336730253966084942174349501874329868147502;
+  uint256 public constant AMOUNT_TO_FUND = 25 ether;
 
   function run() external {
     vm.startBroadcast();
-    // deploy the robot operator
-    aaveCLRobotOperator = new AaveCLRobotOperator(
-      AaveV3ArbitrumAssets.LINK_UNDERLYING,
-      KEEPER_REGISTRY,
-      KEEPER_REGISTRAR,
-      address(AaveV3Arbitrum.COLLECTOR),
-      AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR
-    );
-    // deploy the keeper
-    keeper = new L2RobotKeeper(
-      AaveGovernanceV2.ARBITRUM_BRIDGE_EXECUTOR
-    );
-
-    // deploy the payload
     payload = new ProposalPayloadArbitrumRobot(
-      address(keeper),
-      address(aaveCLRobotOperator),
-      50 ether
+      KEEPER_ID,
+      ARBITRUM_ROBOT_OPERATOR,
+      AMOUNT_TO_FUND
     );
-
-    console.log('Arbitrum keeper address', address(keeper));
-    console.log('Arbitrum operator address', address(aaveCLRobotOperator));
     console.log('Arbitrum payload address', address(payload));
     vm.stopBroadcast();
   }
