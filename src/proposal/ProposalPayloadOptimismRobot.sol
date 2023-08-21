@@ -5,6 +5,7 @@ import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 import {AaveV3Optimism, AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
 import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
+import {SafeCast} from 'solidity-utils/contracts/oz-common/SafeCast.sol';
 
 /**
  * @title ProposalPayloadOptimismRobot
@@ -16,6 +17,7 @@ import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
  */
 contract ProposalPayloadOptimismRobot {
   using SafeERC20 for IERC20;
+  using SafeCast for uint256;
 
   address public immutable ROBOT_OPERATOR;
   uint256 public immutable LINK_AMOUNT;
@@ -53,12 +55,7 @@ contract ProposalPayloadOptimismRobot {
     // refills the keeper with link
     IAaveCLRobotOperator(ROBOT_OPERATOR).refillKeeper(
       KEEPER_ID,
-      safeToUint96(LINK_AMOUNT)
+      LINK_AMOUNT.toUint96()
     );
-  }
-
-  function safeToUint96(uint256 value) internal pure returns (uint96) {
-    require(value <= type(uint96).max, 'Value doesnt fit in 96 bits');
-    return uint96(value);
   }
 }

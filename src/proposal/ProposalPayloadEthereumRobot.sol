@@ -6,21 +6,27 @@ import {AaveV3Ethereum} from 'aave-address-book/AaveV3Ethereum.sol';
 import {AaveV2Ethereum, AaveV2EthereumAssets} from 'aave-address-book/AaveV2Ethereum.sol';
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
 import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
+import {SafeCast} from 'solidity-utils/contracts/oz-common/SafeCast.sol';
 
 /**
  * @title ProposalPayloadEthereumRobot
  * @author BGD Labs
- * @dev Proposal to fund Chainlink Keeper for Governance Automation (gov v2)
+ * @dev Proposal to fund Chainlink Keeper for Governance Automation (gov v2) and compensate bgd labs for previous spendings on robot.
  * - Transfer aLink tokens from collector to the short executor
  * - Withdraw aLink to get link token from the Aave v2 Pool
  * - Refill the Chainlink Keeper with link via the operator contract
+ * - Transfer link tokens from short executor to bgd labs
  */
 contract ProposalPayloadEthereumRobot {
   using SafeERC20 for IERC20;
+  using SafeCast for uint256;
 
   address public immutable ROBOT_OPERATOR;
-  uint256 public immutable LINK_AMOUNT;
+  uint256 public immutable LINK_AMOUNT_TO_KEEPER;
   uint256 public immutable KEEPER_ID;
+
+  address public constant BGD_RECIPIENT = 0xb812d0944f8F581DfAA3a93Dda0d22EcEf51A9CF;
+  uint256 public constant LINK_AMOUNT_TO_BGD = 766_796079710000000000;
 
   /**
    * @dev constructor of the proposal
@@ -31,7 +37,7 @@ contract ProposalPayloadEthereumRobot {
   constructor(uint256 keeperId, address robotOperator, uint256 amountToFund) {
     KEEPER_ID = keeperId;
     ROBOT_OPERATOR = robotOperator;
-    LINK_AMOUNT = amountToFund;
+    LINK_AMOUNT_TO_KEEPER = amountToFund;
   }
 
   function execute() external {
@@ -39,31 +45,32 @@ contract ProposalPayloadEthereumRobot {
     AaveV3Ethereum.COLLECTOR.transfer(
       address(AaveV2EthereumAssets.LINK_A_TOKEN),
       address(this),
-      LINK_AMOUNT
+      LINK_AMOUNT_TO_KEEPER + LINK_AMOUNT_TO_BGD
     );
 
     // withdraw aLink from the Aave V2 Pool
     AaveV2Ethereum.POOL.withdraw(
       address(AaveV2EthereumAssets.LINK_UNDERLYING),
-      LINK_AMOUNT,
+      LINK_AMOUNT_TO_KEEPER + LINK_AMOUNT_TO_BGD,
       address(this)
     );
 
     // approve link to the operator in order to refill the keeper
     IERC20(AaveV2EthereumAssets.LINK_UNDERLYING).forceApprove(
       ROBOT_OPERATOR,
-      LINK_AMOUNT
+      LINK_AMOUNT_TO_KEEPER
     );
 
     // refills the keeper with link
     IAaveCLRobotOperator(ROBOT_OPERATOR).refillKeeper(
       KEEPER_ID,
-      safeToUint96(LINK_AMOUNT)
+      LINK_AMOUNT_TO_KEEPER.toUint96()
     );
-  }
 
-  function safeToUint96(uint256 value) internal pure returns (uint96) {
-    require(value <= type(uint96).max, 'Value doesnt fit in 96 bits');
-    return uint96(value);
+    // transfer link token to bgd labs to compensate for previous spendings on robot
+    IERC20(AaveV2EthereumAssets.LINK_UNDERLYING).safeTransfer(
+      BGD_RECIPIENT,
+      LINK_AMOUNT_TO_BGD
+    );
   }
 }

@@ -5,6 +5,7 @@ import {AaveV3Polygon, AaveV3PolygonAssets} from 'aave-address-book/AaveV3Polygo
 import {IAaveCLRobotOperator} from '../interfaces/IAaveCLRobotOperator.sol';
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
 import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
+import {SafeCast} from 'solidity-utils/contracts/oz-common/SafeCast.sol';
 import {IPegSwap} from '../dependencies/IPegSwap.sol';
 
 /**
@@ -18,6 +19,7 @@ import {IPegSwap} from '../dependencies/IPegSwap.sol';
  */
 contract ProposalPayloadPolygonRobot {
   using SafeERC20 for IERC20;
+  using SafeCast for uint256;
 
   address public constant ERC677_LINK = 0xb0897686c545045aFc77CF20eC7A532E3120E0F1;
   address public immutable ROBOT_OPERATOR;
@@ -46,21 +48,16 @@ contract ProposalPayloadPolygonRobot {
     AaveV3Polygon.POOL.withdraw(AaveV3PolygonAssets.LINK_UNDERLYING, LINK_AMOUNT, address(this));
 
     // Swap ERC-20 link to ERC-677 link
-    IERC20(AaveV3PolygonAssets.LINK_UNDERLYING).approve(address(PEGSWAP), LINK_AMOUNT);
+    IERC20(AaveV3PolygonAssets.LINK_UNDERLYING).forceApprove(address(PEGSWAP), LINK_AMOUNT);
     PEGSWAP.swap(LINK_AMOUNT, AaveV3PolygonAssets.LINK_UNDERLYING, ERC677_LINK);
 
     // approve link to the operator in order to register
     IERC20(ERC677_LINK).forceApprove(ROBOT_OPERATOR, LINK_AMOUNT);
 
-     // refills the keeper with link
+    // refills the keeper with link
     IAaveCLRobotOperator(ROBOT_OPERATOR).refillKeeper(
       KEEPER_ID,
-      safeToUint96(LINK_AMOUNT)
+      LINK_AMOUNT.toUint96()
     );
-  }
-
-  function safeToUint96(uint256 value) internal pure returns (uint96) {
-    require(value <= type(uint96).max, 'Value doesnt fit in 96 bits');
-    return uint96(value);
   }
 }
