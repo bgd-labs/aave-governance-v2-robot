@@ -26,7 +26,7 @@ contract ProposalPayloadEthereumRobot {
   uint256 public immutable KEEPER_ID;
 
   address public constant BGD_RECIPIENT = 0xb812d0944f8F581DfAA3a93Dda0d22EcEf51A9CF;
-  uint256 public constant LINK_AMOUNT_TO_BGD = 766_796079710000000000;
+  uint256 public constant LINK_AMOUNT_TO_BGD = 600e18;
 
   /**
    * @dev constructor of the proposal
