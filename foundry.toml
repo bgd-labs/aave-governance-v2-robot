@@ -21,6 +21,7 @@ polygon = "${RPC_POLYGON}"
 arbitrum = "${RPC_ARBITRUM}"
 fantom = "${RPC_FANTOM}"
 harmony = "${RPC_HARMONY}"
+bnb = "${RPC_BNB}"
 
 [etherscan]
 mainnet={key="${ETHERSCAN_API_KEY_MAINNET}",chainId=1}
@@ -29,6 +30,7 @@ avalanche={key="${ETHERSCAN_API_KEY_AVALANCHE}",chainId=43114}
 polygon={key="${ETHERSCAN_API_KEY_POLYGON}",chainId=137}
 arbitrum={key="${ETHERSCAN_API_KEY_ARBITRUM}",chainId=42161}
 fantom={key="${ETHERSCAN_API_KEY_FANTOM}",chainId=250}
+bnb={key="${ETHERSCAN_API_KEY_BNB}",chainId=56,url='https://api.bscscan.com/api'}
 
 [fuzz]
 runs=500
